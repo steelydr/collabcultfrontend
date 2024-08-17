@@ -87,7 +87,7 @@ const CreateUser = () => {
     active: true,
   });
 
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:1803';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL ;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

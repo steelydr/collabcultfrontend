@@ -5,12 +5,12 @@ import axios from 'axios';
 
 const UsersList = () => {
   const [users, setUsers] = useState([]);
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:1803';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL ;
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${backendUrl}/api/users`);
+        const response = await axios.get(`https://collabculture-app.azurewebsites.net/api/users`);
         setUsers(response.data);
       } catch (error) {
         console.error('Error fetching users:', error);
