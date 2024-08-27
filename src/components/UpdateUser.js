@@ -17,8 +17,7 @@ const UpdateUser = () => {
     profilePicture: '',
     active: true
   });
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:1803';
-
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
   useEffect(() => {
     const fetchUser = async () => {
       try {
