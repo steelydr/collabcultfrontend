@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Checkbox, Typography, Box, Grid, Paper, FormControlLabel } from '@mui/material';
+import { TextField, Checkbox, Typography, Box, Grid, Paper, FormControlLabel, FormControl, RadioGroup, FormLabel, Radio } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
@@ -13,11 +13,11 @@ import PhoneInput from 'react-phone-input-2';
 import { gsap } from 'gsap';
 
 const Background = styled(Box)(({ theme }) => ({
-  minHeight: '100vh',
+  minHeight: '110vh',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  background: 'linear-gradient(135deg, #f0f4f8 0%, #dae2ec 100%)',
+  background: '#000000', // Background is black
   padding: theme.spacing(2),
   boxSizing: 'border-box',
 }));
@@ -27,9 +27,9 @@ const FormContainer = styled(Paper)(({ theme }) => ({
   width: '100%',
   maxWidth: '600px',
   borderRadius: '12px',
-  backgroundColor: '#ffffff',
-  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-  border: '1px solid #e0e0e0',
+  backgroundColor: '#000000', // Card background is black
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)', // Slightly darkened shadow
+  border: '1px solid #333333', // Darker border for contrast
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(3),
     margin: '20px 0',
@@ -38,20 +38,20 @@ const FormContainer = styled(Paper)(({ theme }) => ({
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputBase-root': {
-    color: '#333333',
+    color: '#ffffff', // White text
   },
   '& .MuiFormLabel-root': {
-    color: '#555555',
+    color: '#ffffff', // White label
   },
   '& .MuiOutlinedInput-root': {
     '& fieldset': {
-      borderColor: '#cccccc',
+      borderColor: '#ffffff', // White border
     },
     '&:hover fieldset': {
-      borderColor: '#247BBE',
+      borderColor: '#21CBF3', // Blue on hover
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#247BBE',
+      borderColor: '#21CBF3', // Blue on focus
     },
   },
 }));
@@ -61,12 +61,33 @@ const StyledPhoneInput = styled(PhoneInput)(({ theme }) => ({
     width: '100%',
     height: '56px',
     fontSize: '1rem',
-    borderColor: '#cccccc',
+    color: '#ffffff', // White text
+    backgroundColor: '#000000', // Transparent background
+    border: '1px solid #ffffff', // White border
+    paddingLeft: '40px', // Adjusting padding to align with other inputs
     '&:hover, &:focus': {
-      borderColor: '#247BBE',
+      borderColor: '#21CBF3', // Blue on hover and focus
+    },
+    '&::placeholder': {
+      color: '#ffffff', // White placeholder text
     },
   },
+  '& .flag-dropdown': {
+    backgroundColor: '00000000', // Transparent background for flag dropdown
+    border: 'none', // Remove border for dropdown
+  },
+  '& .country-list': {
+    backgroundColor: '#000000', // Match dropdown background to other inputs
+    color: '#ffffff', // White text in dropdown
+  },
+  '& .selected-flag': {
+    backgroundColor: 'transparent', // Transparent background for selected flag
+  },
+  '& .country': {
+    color: '#ffffff', // White text for country names
+  },
 }));
+
 
 const BubbleButtonContainer = styled('div')({
   position: 'relative',
@@ -77,9 +98,9 @@ const BubbleButtonContainer = styled('div')({
 const BubbleButton = styled('button')({
   position: 'relative',
   zIndex: 2,
-  backgroundColor: '#222',
+  backgroundColor: '#000000',
   border: 'none',
-  color: '#fff',
+  color: '#21CBF3',
   display: 'inline-block',
   fontFamily: "'Montserrat', sans-serif",
   fontSize: '14px',
@@ -92,8 +113,8 @@ const BubbleButton = styled('button')({
   transition: 'all 0.1s ease-out',
   width: '100%',
   '&:hover': {
-    backgroundColor: '#90feb5',
-    color: '#fff',
+    backgroundColor: '#21CBF3',
+    color: '#000000',
   },
   '&:active': {
     transform: 'scale(0.95)',
@@ -116,7 +137,7 @@ const Circle = styled('span')({
   width: '25px',
   height: '25px',
   borderRadius: '15px',
-  backgroundColor: '#222',
+  backgroundColor: '#21CBF3',
   transition: 'background 0.1s ease-out',
 });
 
@@ -152,9 +173,10 @@ const CreateUser = () => {
     password: '',
     confirmPassword: '',
     address: '',
+    gender: '',
     active: true,
   });
-
+  const [errors, setErrors] = React.useState({});
   const buttonRef = useRef(null);
   const topLeftCirclesRef = useRef([]);
   const bottomRightCirclesRef = useRef([]);
@@ -207,6 +229,34 @@ const CreateUser = () => {
     };
   }, []);
 
+  const validate = () => {
+    let tempErrors = {};
+
+    if (!userDetails.name) tempErrors.name = "Name is required";
+    if (!userDetails.username) {
+      tempErrors.username = "Username is required";
+    } else if (/^\S+@\S+\.\S+$/.test(userDetails.username)) {
+      tempErrors.username = "Username should not be an email";
+    }
+    if (!userDetails.email) {
+      tempErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(userDetails.email)) {
+      tempErrors.email = "Invalid email format";
+    }
+    if (!userDetails.phoneNumber || userDetails.phoneNumber.length !== 9) {
+      tempErrors.phoneNumber = "Phone number must be exactly 9 digits";
+    }
+    if (!userDetails.password) tempErrors.password = "Password is required";
+    if (userDetails.password !== userDetails.confirmPassword) {
+      tempErrors.confirmPassword = "Passwords do not match";
+    }
+    if (!userDetails.gender) tempErrors.gender = "Gender is required";
+
+    setErrors(tempErrors);
+
+    return Object.keys(tempErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setUserDetails(prev => ({
@@ -224,12 +274,38 @@ const CreateUser = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validate()) return;
+
+    // Constructing the payload to match the API structure
+    const payload = {
+      username: userDetails.username,
+      email: userDetails.email,
+      phoneNumber: userDetails.phoneNumber,
+      password: userDetails.password,
+      name: userDetails.name,
+      gender: userDetails.gender,
+      address: userDetails.address,
+      profilePictureType: '', // Assuming a default type, adjust if necessary
+      profilePicture: '', // Placeholder, adjust if you have an actual picture to send
+      headline: '', // Example headline, adjust as needed
+      summary: '', // Example summary, adjust as needed
+      active: userDetails.active
+    };
+
     try {
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/users`, userDetails);
+      await axios.post(`https://collabculture-app.azurewebsites.net/api/users`, payload, {
+        headers: {
+          'Content-Type': 'application/json', // Ensure JSON is sent
+        },
+      });
+
+      // Handle success response
       swal("Success", "Registration successful!", "success").then(() => {
         navigate('/');
       });
     } catch (error) {
+      // Handle error response
       swal("Error", "Error creating user", "error");
     }
   };
@@ -238,8 +314,8 @@ const CreateUser = () => {
     <Background>
       <SVGFilter />
       <FormContainer elevation={6}>
-        <Typography component="h1" variant="h4" align="center" sx={{ color: '#247BBE', mb: 4, fontWeight: 'bold' }}>
-          Sign-Up
+        <Typography component="h1" variant="h4" align="center" sx={{ color: '#ffff', mb: 4, fontWeight: 'bold' }}>
+          SIGN-UP
         </Typography>
         <Box component="form" noValidate onSubmit={handleSubmit}>
           <Grid container spacing={2}>
@@ -253,8 +329,10 @@ const CreateUser = () => {
                 autoComplete="name"
                 value={userDetails.name}
                 onChange={handleChange}
+                error={!!errors.name}
+                helperText={errors.name}
                 InputProps={{
-                  startAdornment: <AccountCircleOutlinedIcon sx={{ color: '#247BBE', mr: 1 }} />,
+                  startAdornment: <AccountCircleOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
                 }}
               />
             </Grid>
@@ -268,8 +346,10 @@ const CreateUser = () => {
                 autoComplete="username"
                 value={userDetails.username}
                 onChange={handleChange}
+                error={!!errors.username}
+                helperText={errors.username}
                 InputProps={{
-                  startAdornment: <PersonAddOutlinedIcon sx={{ color: '#247BBE', mr: 1 }} />,
+                  startAdornment: <PersonAddOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
                 }}
               />
             </Grid>
@@ -283,8 +363,10 @@ const CreateUser = () => {
                 autoComplete="email"
                 value={userDetails.email}
                 onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
                 InputProps={{
-                  startAdornment: <EmailOutlinedIcon sx={{ color: '#247BBE', mr: 1 }} />,
+                  startAdornment: <EmailOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
                 }}
               />
             </Grid>
@@ -293,8 +375,15 @@ const CreateUser = () => {
                 country={'us'}
                 value={userDetails.phoneNumber}
                 onChange={handlePhoneChange}
-                inputStyle={{ width: '100%' }}
+                inputStyle={{ width: '100%',backgroundColor:'black' }}
+                isValid={(value, country) => value.length === 9}
+                inputProps={{ error: !!errors.phoneNumber }}
               />
+              {errors.phoneNumber && (
+                <Typography variant="caption" color="error" display="block" gutterBottom>
+                  {errors.phoneNumber}
+                </Typography>
+              )}
             </Grid>
             <Grid item xs={12} sm={6}>
               <StyledTextField
@@ -307,8 +396,10 @@ const CreateUser = () => {
                 autoComplete="new-password"
                 value={userDetails.password}
                 onChange={handleChange}
+                error={!!errors.password}
+                helperText={errors.password}
                 InputProps={{
-                  startAdornment: <LockOutlinedIcon sx={{ color: '#247BBE', mr: 1 }} />,
+                  startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
                 }}
               />
             </Grid>
@@ -322,10 +413,43 @@ const CreateUser = () => {
                 id="confirmPassword"
                 value={userDetails.confirmPassword}
                 onChange={handleChange}
+                error={!!errors.confirmPassword}
+                helperText={errors.confirmPassword}
                 InputProps={{
-                  startAdornment: <LockOutlinedIcon sx={{ color: '#247BBE', mr: 1 }} />,
+                  startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
                 }}
               />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl component="fieldset" error={!!errors.gender}>
+                <FormLabel component="legend" sx={{ color: '#ffffff' }}>Gender</FormLabel>
+                <RadioGroup
+                  aria-label="gender"
+                  name="gender"
+                  value={userDetails.gender}
+                  onChange={handleChange}
+                  row
+                >
+                  <FormControlLabel
+  value="male"
+  control={<Radio sx={{ color: '#21CBF3' }} />}
+  label="Male"
+  sx={{ color: 'white' }}
+/>
+<FormControlLabel
+  value="female"
+  control={<Radio sx={{ color: '#21CBF3' }} />}
+  label="Female"
+  sx={{ color: 'white' }}
+/>
+
+                </RadioGroup>
+                {errors.gender && (
+                  <Typography variant="caption" color="error" display="block" gutterBottom>
+                    {errors.gender}
+                  </Typography>
+                )}
+              </FormControl>
             </Grid>
           </Grid>
           <FormControlLabel
@@ -335,14 +459,14 @@ const CreateUser = () => {
                 onChange={handleChange}
                 name="active"
                 sx={{
-                  color: '#247BBE',
+                  color: '#21CBF3',
                   '&.Mui-checked': {
-                    color: '#247BBE',
+                    color: '#21CBF3',
                   },
                 }}
               />
             }
-            label={<Typography sx={{ color: '#333333' }}>I hereby declare that the above information provided is true and correct</Typography>}
+            label={<Typography sx={{ color: '#ffffff' }}>I hereby declare that the above information provided is true and correct</Typography>}
             sx={{ mt: 2, mb: 2 }}
           />
           <BubbleButtonContainer>

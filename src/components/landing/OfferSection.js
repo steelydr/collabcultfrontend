@@ -5,8 +5,16 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EventIcon from '@mui/icons-material/Event';
 
 const YOUTUBE_CHANNEL_ID = 'UC5Izf1mIZXc0cCgJuxH-iKA'; // Replace with the correct channelId
-const YOUTUBE_API_KEY = 'AIzaSyDd5Ts9To-v3O1PhM1d0cOOzONVTgOJ5E4';
+const YOUTUBE_API_KEY = 'AIzaSyC3sbZxElDd9x9LQ-l8si0hbNKQjPLdMWM';
 const MAX_RESULTS = 3; // Number of videos to display
+
+const LOCAL_STORAGE_KEYS = {
+  videos: 'youtube_videos',
+  workshops: 'workshops_data',
+  events: 'events_data',
+  timestamp: 'data_timestamp',
+};
+const CACHE_DURATION = 1000 * 60 * 15; // Cache duration in milliseconds (e.g., 15 minutes)
 
 const OfferSection = () => {
   const [videos, setVideos] = useState([]);
@@ -15,68 +23,101 @@ const OfferSection = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchYouTubeVideos = async () => {
-      try {
-        const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
-          params: {
-            part: 'snippet',
-            channelId: YOUTUBE_CHANNEL_ID,
-            maxResults: MAX_RESULTS,
-            order: 'date',
-            key: YOUTUBE_API_KEY
-          }
-        });
+    const now = new Date().getTime();
 
-        setVideos(response.data.items);
-      } catch (error) {
-        console.error('Error fetching YouTube videos:', error);
-        setError(`Failed to fetch YouTube videos: ${error.message}`);
+    const fetchYouTubeVideos = async () => {
+      const cachedVideos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.videos));
+      const cachedTimestamp = localStorage.getItem(LOCAL_STORAGE_KEYS.timestamp);
+
+      if (cachedVideos && now - cachedTimestamp < CACHE_DURATION) {
+        setVideos(cachedVideos);
+      } else {
+        try {
+          const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+            params: {
+              part: 'snippet',
+              channelId: YOUTUBE_CHANNEL_ID,
+              maxResults: MAX_RESULTS,
+              order: 'date',
+              key: YOUTUBE_API_KEY
+            }
+          });
+
+          setVideos(response.data.items);
+          localStorage.setItem(LOCAL_STORAGE_KEYS.videos, JSON.stringify(response.data.items));
+          localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+        } catch (error) {
+          console.error('Error fetching YouTube videos:', error);
+          setError(`Failed to fetch YouTube videos: ${error.message}`);
+        }
       }
     };
 
     const fetchWorkshops = async () => {
-      try {
-        const response = await axios.get('https://collabculture-app.azurewebsites.net/api/workshops');
-        console.log('API Response:', response.data);
+      const cachedWorkshops = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.workshops));
+      const cachedTimestamp = localStorage.getItem(LOCAL_STORAGE_KEYS.timestamp);
 
-        if (Array.isArray(response.data)) {
-          setWorkshops(response.data);
-        } else if (typeof response.data === 'object' && response.data !== null) {
-          const workshopsArray = response.data.workshops || Object.values(response.data);
-          if (Array.isArray(workshopsArray)) {
-            setWorkshops(workshopsArray);
+      if (cachedWorkshops && now - cachedTimestamp < CACHE_DURATION) {
+        setWorkshops(cachedWorkshops);
+      } else {
+        try {
+          const response = await axios.get('https://collabculture-app.azurewebsites.net/api/workshops');
+          console.log('API Response:', response.data);
+
+          if (Array.isArray(response.data)) {
+            setWorkshops(response.data);
+            localStorage.setItem(LOCAL_STORAGE_KEYS.workshops, JSON.stringify(response.data));
+            localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+          } else if (typeof response.data === 'object' && response.data !== null) {
+            const workshopsArray = response.data.workshops || Object.values(response.data);
+            if (Array.isArray(workshopsArray)) {
+              setWorkshops(workshopsArray);
+              localStorage.setItem(LOCAL_STORAGE_KEYS.workshops, JSON.stringify(workshopsArray));
+              localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+            } else {
+              throw new Error('Unable to extract workshops array from the response');
+            }
           } else {
-            throw new Error('Unable to extract workshops array from the response');
+            throw new Error(`Unexpected data format: ${typeof response.data}`);
           }
-        } else {
-          throw new Error(`Unexpected data format: ${typeof response.data}`);
+        } catch (error) {
+          console.error('Error fetching workshops:', error);
+          setError(`Failed to fetch workshops: ${error.message}`);
         }
-      } catch (error) {
-        console.error('Error fetching workshops:', error);
-        setError(`Failed to fetch workshops: ${error.message}`);
       }
     };
 
     const fetchEvents = async () => {
-      try {
-        const response = await axios.get('https://collabculture-app.azurewebsites.net/api/events');
-        console.log('API Response:', response.data);
+      const cachedEvents = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.events));
+      const cachedTimestamp = localStorage.getItem(LOCAL_STORAGE_KEYS.timestamp);
 
-        if (Array.isArray(response.data)) {
-          setEvents(response.data);
-        } else if (typeof response.data === 'object' && response.data !== null) {
-          const eventsArray = response.data.events || Object.values(response.data);
-          if (Array.isArray(eventsArray)) {
-            setEvents(eventsArray);
+      if (cachedEvents && now - cachedTimestamp < CACHE_DURATION) {
+        setEvents(cachedEvents);
+      } else {
+        try {
+          const response = await axios.get('https://collabculture-app.azurewebsites.net/api/events');
+          console.log('API Response:', response.data);
+
+          if (Array.isArray(response.data)) {
+            setEvents(response.data);
+            localStorage.setItem(LOCAL_STORAGE_KEYS.events, JSON.stringify(response.data));
+            localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+          } else if (typeof response.data === 'object' && response.data !== null) {
+            const eventsArray = response.data.events || Object.values(response.data);
+            if (Array.isArray(eventsArray)) {
+              setEvents(eventsArray);
+              localStorage.setItem(LOCAL_STORAGE_KEYS.events, JSON.stringify(eventsArray));
+              localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+            } else {
+              throw new Error('Unable to extract events array from the response');
+            }
           } else {
-            throw new Error('Unable to extract events array from the response');
+            throw new Error(`Unexpected data format: ${typeof response.data}`);
           }
-        } else {
-          throw new Error(`Unexpected data format: ${typeof response.data}`);
+        } catch (error) {
+          console.error('Error fetching events:', error);
+          setError(`Failed to fetch events: ${error.message}`);
         }
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setError(`Failed to fetch events: ${error.message}`);
       }
     };
 

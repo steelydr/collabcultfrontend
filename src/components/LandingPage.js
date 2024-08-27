@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress } from '@mui/material';
-import HeroSection from './landing/HeroSection';
-import Footer from './landing/Footer';
-import Navbar from './landing/Navbar';
-import OfferSection from './landing/OfferSection'; // Import the new OfferSection component
+
+// Lazy load the components
+const HeroSection = lazy(() => import('./landing/HeroSection'));
+const Footer = lazy(() => import('./landing/Footer'));
+const Navbar = lazy(() => import('./landing/Navbar'));
+const OfferSection = lazy(() => import('./landing/OfferSection')); // Import the new OfferSection component
 
 // Create a default theme with a black background
 const defaultTheme = createTheme({
@@ -58,10 +60,12 @@ const LandingPage = () => {
         <Loader />
       ) : (
         <Box sx={{ bgcolor: 'background.default', color: 'text.primary', minHeight: '100vh' }}>
-          <Navbar scrolled={scrolled} />
-          <HeroSection />
-          <OfferSection /> {/* Use the new OfferSection component here */}
-          <Footer />
+          <Suspense fallback={<Loader />}>
+            <Navbar scrolled={scrolled} />
+            <HeroSection />
+            <OfferSection /> {/* Use the new OfferSection component here */}
+            <Footer />
+          </Suspense>
         </Box>
       )}
     </ThemeProvider>
