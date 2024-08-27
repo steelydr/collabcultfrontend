@@ -36,8 +36,8 @@ const Footer = () => {
             <Typography variant="h6" sx={{ mb: 4, fontWeight: 600, fontSize: '1.5rem', letterSpacing: '0.5px' }}>
               COLLAB CULT
             </Typography>
-            <Typography variant="body1" sx={{ mb: 4, opacity: 0.7, lineHeight: 1.8, fontSize: '1rem' }}>
-              A platform dedicated to fostering collaboration and innovation in the tech community.
+            <Typography variant="body1" sx={{ mb: 4, opacity: 0.7, lineHeight: 1.8, fontSize: '1rem',textAlign: 'justify'  }}>
+            CollabCult is a community platform that helps individuals break free from routine careers and pursue their passions through collaboration and support, empowering members to connect, create, and achieve their goals together.
             </Typography>
             <Box sx={{ mb: 4 }}>
               {socialLinks.map((link, index) => (

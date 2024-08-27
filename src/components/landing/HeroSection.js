@@ -101,9 +101,36 @@ const HeroSection = () => (
       <AnimatedText variant="h2" component="h1" gutterBottom>
         Connect  Create  Conquer
       </AnimatedText>
-      <Typography variant="body1" component="h2" gutterBottom sx={{ mb: 4, fontWeight: 250, fontSize: '1rem' }}>
-        Break free from routine. Pursue your passions. Collaborate with like-minded individuals.
-      </Typography>
+      <Typography 
+  variant="h5" 
+  component="h2" 
+  gutterBottom 
+  sx={{ 
+    mb: 4, 
+    fontWeight: 600, 
+    fontSize: '1.5rem', 
+    lineHeight: 1.5, 
+    color: '#013c3c' // Deep Teal for emphasis
+  }}
+>
+  Break free from routine. Pursue your passions. Collaborate with like-minded individuals.
+</Typography>
+
+<Typography 
+  variant="body1" 
+  component="h2" 
+  gutterBottom 
+  sx={{ 
+    mb: 4, 
+    fontWeight: 300, 
+    fontSize: '1.1rem', 
+    lineHeight: 1.6, 
+    color: '#f1f1f1' // Charcoal Gray for secondary text
+  }}
+>
+  Stay Connected with us for more updates!
+</Typography>
+
       <StyledButton variant="outlined" size="large">
         Join Us
       </StyledButton>
