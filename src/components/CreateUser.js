@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useReducer, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Checkbox, Typography, Box, Grid, Paper, FormControlLabel, FormControl, RadioGroup, FormLabel, Radio } from '@mui/material';
@@ -11,47 +11,71 @@ import swal from 'sweetalert';
 import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-input-2';
 import { gsap } from 'gsap';
+import CryptoJS from 'crypto-js';
+import { SECRET_KEY } from './config'; // Import the secret key
+
+document.body.style.backgroundColor = '#000000';
+document.body.style.overflowX = 'hidden';
+document.documentElement.style.overflowX = 'hidden';
 
 const Background = styled(Box)(({ theme }) => ({
-  minHeight: '110vh',
+  minHeight: '100vh',
   display: 'flex',
   justifyContent: 'center',
-  alignItems: 'center',
-  background: '#000000', // Background is black
-  padding: theme.spacing(2),
+  alignItems: 'flex-start',
+  paddingTop: theme.spacing(4),
+  paddingLeft: theme.spacing(2),
+  paddingRight: theme.spacing(2),
+  background: '#000000',
   boxSizing: 'border-box',
+  perspective: '1000px',
 }));
 
-const FormContainer = styled(Paper)(({ theme }) => ({
+const FormContainer = styled(Paper)(({ theme, isFlipped }) => ({
+  marginTop: theme.spacing(2),
   padding: theme.spacing(4),
   width: '100%',
   maxWidth: '600px',
   borderRadius: '12px',
-  backgroundColor: '#000000', // Card background is black
-  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)', // Slightly darkened shadow
-  border: '1px solid #333333', // Darker border for contrast
+  backgroundColor: '#000000',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+  boxSizing: 'border-box',
   [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(3),
-    margin: '20px 0',
+    padding: theme.spacing(),
+    margin: '10px 10px',
   },
+  transformStyle: 'preserve-3d',
+  transform: isFlipped ? 'rotateY(180deg)' : 'none',
+  transition: 'transform 0.8s',
+  position: 'relative',
+}));
+
+const FormSide = styled(Box)(({ isBack }) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  backfaceVisibility: 'hidden',
+  transform: isBack ? 'rotateY(180deg)' : 'none',
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   '& .MuiInputBase-root': {
-    color: '#ffffff', // White text
+    color: '#ffffff',
   },
   '& .MuiFormLabel-root': {
-    color: '#ffffff', // White label
+    color: '#ffffff',
   },
   '& .MuiOutlinedInput-root': {
     '& fieldset': {
-      borderColor: '#ffffff', // White border
+      borderColor: '#ffffff',
     },
     '&:hover fieldset': {
-      borderColor: '#21CBF3', // Blue on hover
+      borderColor: '#21CBF3',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#21CBF3', // Blue on focus
+      borderColor: '#21CBF3',
     },
   },
 }));
@@ -61,33 +85,32 @@ const StyledPhoneInput = styled(PhoneInput)(({ theme }) => ({
     width: '100%',
     height: '56px',
     fontSize: '1rem',
-    color: '#ffffff', // White text
-    backgroundColor: '#000000', // Transparent background
-    border: '1px solid #ffffff', // White border
-    paddingLeft: '40px', // Adjusting padding to align with other inputs
+    color: '#ffffff',
+    backgroundColor: '#000000',
+    border: '1px solid #ffffff',
+    paddingLeft: '40px',
     '&:hover, &:focus': {
-      borderColor: '#21CBF3', // Blue on hover and focus
+      borderColor: '#21CBF3',
     },
     '&::placeholder': {
-      color: '#ffffff', // White placeholder text
+      color: '#ffffff',
     },
   },
   '& .flag-dropdown': {
-    backgroundColor: '00000000', // Transparent background for flag dropdown
-    border: 'none', // Remove border for dropdown
+    backgroundColor: '00000000',
+    border: 'none',
   },
   '& .country-list': {
-    backgroundColor: '#000000', // Match dropdown background to other inputs
-    color: '#ffffff', // White text in dropdown
+    backgroundColor: '#000000',
+    color: '#ffffff',
   },
   '& .selected-flag': {
-    backgroundColor: 'transparent', // Transparent background for selected flag
+    backgroundColor: 'transparent',
   },
   '& .country': {
-    color: '#ffffff', // White text for country names
+    color: '#ffffff',
   },
 }));
-
 
 const BubbleButtonContainer = styled('div')({
   position: 'relative',
@@ -163,63 +186,194 @@ const SVGFilter = () => (
   </svg>
 );
 
+const initialState = {
+  name: '',
+  username: '',
+  email: '',
+  phoneNumber: '',
+  password: '',
+  confirmPassword: '',
+  address: '',
+  gender: '',
+  active: true,
+  isFlipped: false,
+  errors: {},
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'SET_FIELD_VALUE':
+      return {
+        ...state,
+        [action.field]: action.value,
+      };
+    case 'SET_ERRORS':
+      return {
+        ...state,
+        errors: action.errors,
+      };
+    case 'SET_IS_FLIPPED':
+      return {
+        ...state,
+        isFlipped: action.isFlipped,
+      };
+    case 'RESET_FORM':
+      return initialState;
+    default:
+      return state;
+  }
+}
+
 const CreateUser = () => {
   const navigate = useNavigate();
-  const [userDetails, setUserDetails] = React.useState({
-    name: '',
-    username: '',
-    email: '',
-    phoneNumber: '',
-    password: '',
-    confirmPassword: '',
-    address: '',
-    gender: '',
-    active: true,
-  });
-  const [errors, setErrors] = React.useState({});
+  const [state, dispatch] = useReducer(reducer, initialState);
   const buttonRef = useRef(null);
   const topLeftCirclesRef = useRef([]);
   const bottomRightCirclesRef = useRef([]);
+
+  const validate = useCallback(() => {
+    let tempErrors = {};
+
+    if (!state.name) tempErrors.name = "Name is required";
+    if (!state.username) {
+      tempErrors.username = "Username is required";
+    } else if (/^\S+@\S+\.\S+$/.test(state.username)) {
+      tempErrors.username = "Username should not be an email";
+    }
+    if (!state.email) {
+      tempErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(state.email)) {
+      tempErrors.email = "Invalid email format";
+    }
+    if (!state.password) tempErrors.password = "Password is required";
+    if (state.password !== state.confirmPassword) {
+      tempErrors.confirmPassword = "Passwords do not match";
+    }
+    if (!state.gender) tempErrors.gender = "Gender is required";
+
+    dispatch({ type: 'SET_ERRORS', errors: tempErrors });
+
+    return Object.keys(tempErrors).length === 0;
+  }, [state.name, state.username, state.email, state.password, state.confirmPassword, state.gender]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value, type, checked } = e.target;
+    dispatch({
+      type: 'SET_FIELD_VALUE',
+      field: name,
+      value: type === 'checkbox' ? checked : value,
+    });
+  }, []);
+
+  const handlePhoneChange = useCallback((value) => {
+    dispatch({
+      type: 'SET_FIELD_VALUE',
+      field: 'phoneNumber',
+      value,
+    });
+  }, []);
+
+  const handleSubmit = useCallback(async (e) => {
+    e.preventDefault();
+  
+    if (!validate()) return;
+  
+    const payload = {
+      username: state.username,
+      email: state.email,
+      phoneNumber: state.phoneNumber,
+      password: state.password,
+      name: state.name,
+      gender: state.gender,
+      address: state.address,
+      profilePictureType: '',
+      profilePicture: '',
+      headline: '',
+      summary: '',
+      active: state.active,
+    };
+  
+    try {
+      await axios.post(`http://localhost:80/api/users`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      swal("Success", "Registration successful!", "success").then(() => {
+        navigate('/community');
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 409) {
+        dispatch({
+          type: 'SET_ERRORS',
+          errors: { ...state.errors, username: "Username already exists" },
+        });
+        swal("Error", "Username already exists. Please choose a different one.", "error");
+      } else {
+        swal("Error", "Error creating user", "error");
+      }
+    }
+  }, [validate, state.username, state.email, state.phoneNumber, state.password, state.name, state.gender, state.address, state.active, state.errors, navigate]);
+
+  const handleLoginSubmit = useCallback(async (e) => {
+    e.preventDefault();
+  
+    try {
+      const response = await axios.get('http://localhost:80/api/users', {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+  
+      const users = response.data.users;
+      const user = users.find(u => u.username === state.username && u.password === state.password);
+  
+      if (user) {
+        const encryptedUser = CryptoJS.AES.encrypt(JSON.stringify(user), SECRET_KEY).toString();
+        localStorage.setItem('user', encryptedUser);
+  
+        swal("Success", "Login successful!", "success").then(() => {
+          navigate(`/community`);
+        });
+      } else {
+        swal("Error", "Login failed. Please check your credentials.", "error");
+      }
+    } catch (error) {
+      swal("Error", "Error fetching user data", "error");
+    }
+  }, [state.username, state.password, navigate]);
 
   useEffect(() => {
     const button = buttonRef.current;
     const topLeftCircles = topLeftCirclesRef.current;
     const bottomRightCircles = bottomRightCirclesRef.current;
 
-    const createAnimation = () => {
-      const tl = gsap.timeline({ paused: true });
-      
-      // Top-left circles animation
-      tl.to(topLeftCircles, { duration: 1.2, x: -25, y: -25, scaleY: 2, ease: "slow(0.1, 0.7, false)" });
-      tl.to(topLeftCircles[0], { duration: 0.1, scale: 0.2, x: '+=6', y: '-=2' });
-      tl.to(topLeftCircles[1], { duration: 0.1, scaleX: 1, scaleY: 0.8, x: '-=10', y: '-=7' }, '-=0.1');
-      tl.to(topLeftCircles[2], { duration: 0.1, scale: 0.2, x: '-=15', y: '+=6' }, '-=0.1');
-      tl.to(topLeftCircles[0], { duration: 1, scale: 0, x: '-=5', y: '-=15', opacity: 0 });
-      tl.to(topLeftCircles[1], { duration: 1, scaleX: 0.4, scaleY: 0.4, x: '-=10', y: '-=10', opacity: 0 }, '-=1');
-      tl.to(topLeftCircles[2], { duration: 1, scale: 0, x: '-=15', y: '+=5', opacity: 0 }, '-=1');
+    const tl = gsap.timeline({ paused: true });
 
-      // Bottom-right circles animation
-      tl.to(bottomRightCircles, { duration: 1.1, x: 30, y: 30, ease: "slow(0.1, 0.7, false)" }, 0);
-      tl.to(bottomRightCircles[0], { duration: 0.1, scale: 0.2, x: '-=6', y: '+=3' });
-      tl.to(bottomRightCircles[1], { duration: 0.1, scale: 0.8, x: '+=7', y: '+=3' }, '-=0.1');
-      tl.to(bottomRightCircles[2], { duration: 0.1, scale: 0.2, x: '+=15', y: '-=6' }, '-=0.2');
-      tl.to(bottomRightCircles[0], { duration: 1, scale: 0, x: '+=5', y: '+=15', opacity: 0 });
-      tl.to(bottomRightCircles[1], { duration: 1, scale: 0.4, x: '+=7', y: '+=7', opacity: 0 }, '-=1');
-      tl.to(bottomRightCircles[2], { duration: 1, scale: 0, x: '+=15', y: '-=5', opacity: 0 }, '-=1');
+    tl.to(topLeftCircles, { duration: 1.2, x: -25, y: -25, scaleY: 2, ease: "slow(0.1, 0.7, false)" });
+    tl.to(topLeftCircles[0], { duration: 0.1, scale: 0.2, x: '+=6', y: '-=2' });
+    tl.to(topLeftCircles[1], { duration: 0.1, scaleX: 1, scaleY: 0.8, x: '-=10', y: '-=7' }, '-=0.1');
+    tl.to(topLeftCircles[2], { duration: 0.1, scale: 0.2, x: '-=15', y: '+=6' }, '-=0.1');
+    tl.to(topLeftCircles[0], { duration: 1, scale: 0, x: '-=5', y: '-=15', opacity: 0 });
+    tl.to(topLeftCircles[1], { duration: 1, scaleX: 0.4, scaleY: 0.4, x: '-=10', y: '-=10', opacity: 0 }, '-=1');
+    tl.to(topLeftCircles[2], { duration: 1, scale: 0, x: '-=15', y: '+=5', opacity: 0 }, '-=1');
 
-      // Button animation
-      tl.to(button, { duration: 0.8, scaleY: 1.1 }, 0.1);
-      tl.to(button, { duration: 1.8, scale: 1, ease: "elastic.out(1.2, 0.4)" }, 1.2);
+    tl.to(bottomRightCircles, { duration: 1.1, x: 30, y: 30, ease: "slow(0.1, 0.7, false)" }, 0);
+    tl.to(bottomRightCircles[0], { duration: 0.1, scale: 0.2, x: '-=6', y: '+=3' });
+    tl.to(bottomRightCircles[1], { duration: 0.1, scale: 0.8, x: '+=7', y: '+=3' }, '-=0.1');
+    tl.to(bottomRightCircles[2], { duration: 0.1, scale: 0.2, x: '+=15', y: '-=6' }, '-=0.2');
+    tl.to(bottomRightCircles[0], { duration: 1, scale: 0, x: '+=5', y: '+=15', opacity: 0 });
+    tl.to(bottomRightCircles[1], { duration: 1, scale: 0.4, x: '+=7', y: '+=7', opacity: 0 }, '-=1');
+    tl.to(bottomRightCircles[2], { duration: 1, scale: 0, x: '+=15', y: '-=5', opacity: 0 }, '-=1');
 
-      tl.timeScale(2.6);
+    tl.to(button, { duration: 0.8, scaleY: 1.1 }, 0.1);
+    tl.to(button, { duration: 1.8, scale: 1, ease: "elastic.out(1.2, 0.4)" }, 1.2);
 
-      return tl;
-    };
-
-    const animation = createAnimation();
+    tl.timeScale(2.6);
 
     const handleMouseEnter = () => {
-      animation.restart();
+      tl.restart();
     };
 
     button.addEventListener('mouseenter', handleMouseEnter);
@@ -229,260 +383,261 @@ const CreateUser = () => {
     };
   }, []);
 
-  const validate = () => {
-    let tempErrors = {};
-
-    if (!userDetails.name) tempErrors.name = "Name is required";
-    if (!userDetails.username) {
-      tempErrors.username = "Username is required";
-    } else if (/^\S+@\S+\.\S+$/.test(userDetails.username)) {
-      tempErrors.username = "Username should not be an email";
-    }
-    if (!userDetails.email) {
-      tempErrors.email = "Email is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(userDetails.email)) {
-      tempErrors.email = "Invalid email format";
-    }
-    if (!userDetails.phoneNumber || userDetails.phoneNumber.length !== 9) {
-      tempErrors.phoneNumber = "Phone number must be exactly 9 digits";
-    }
-    if (!userDetails.password) tempErrors.password = "Password is required";
-    if (userDetails.password !== userDetails.confirmPassword) {
-      tempErrors.confirmPassword = "Passwords do not match";
-    }
-    if (!userDetails.gender) tempErrors.gender = "Gender is required";
-
-    setErrors(tempErrors);
-
-    return Object.keys(tempErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setUserDetails(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handlePhoneChange = (value) => {
-    setUserDetails(prev => ({
-      ...prev,
-      phoneNumber: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validate()) return;
-
-    // Constructing the payload to match the API structure
-    const payload = {
-      username: userDetails.username,
-      email: userDetails.email,
-      phoneNumber: userDetails.phoneNumber,
-      password: userDetails.password,
-      name: userDetails.name,
-      gender: userDetails.gender,
-      address: userDetails.address,
-      profilePictureType: '', // Assuming a default type, adjust if necessary
-      profilePicture: '', // Placeholder, adjust if you have an actual picture to send
-      headline: '', // Example headline, adjust as needed
-      summary: '', // Example summary, adjust as needed
-      active: userDetails.active
-    };
-
-    try {
-      await axios.post(`https://collabculture-app.azurewebsites.net/api/users`, payload, {
-        headers: {
-          'Content-Type': 'application/json', // Ensure JSON is sent
-        },
-      });
-
-      // Handle success response
-      swal("Success", "Registration successful!", "success").then(() => {
-        navigate('/');
-      });
-    } catch (error) {
-      // Handle error response
-      swal("Error", "Error creating user", "error");
-    }
-  };
-
   return (
     <Background>
       <SVGFilter />
-      <FormContainer elevation={6}>
-        <Typography component="h1" variant="h4" align="center" sx={{ color: '#ffff', mb: 4, fontWeight: 'bold' }}>
-          SIGN-UP
-        </Typography>
-        <Box component="form" noValidate onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                required
-                fullWidth
-                id="name"
-                label="Name"
-                name="name"
-                autoComplete="name"
-                value={userDetails.name}
-                onChange={handleChange}
-                error={!!errors.name}
-                helperText={errors.name}
-                InputProps={{
-                  startAdornment: <AccountCircleOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                required
-                fullWidth
-                id="username"
-                label="Username"
-                name="username"
-                autoComplete="username"
-                value={userDetails.username}
-                onChange={handleChange}
-                error={!!errors.username}
-                helperText={errors.username}
-                InputProps={{
-                  startAdornment: <PersonAddOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <StyledTextField
-                required
-                fullWidth
-                id="email"
-                label="Email"
-                name="email"
-                autoComplete="email"
-                value={userDetails.email}
-                onChange={handleChange}
-                error={!!errors.email}
-                helperText={errors.email}
-                InputProps={{
-                  startAdornment: <EmailOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <StyledPhoneInput
-                country={'us'}
-                value={userDetails.phoneNumber}
-                onChange={handlePhoneChange}
-                inputStyle={{ width: '100%',backgroundColor:'black' }}
-                isValid={(value, country) => value.length === 9}
-                inputProps={{ error: !!errors.phoneNumber }}
-              />
-              {errors.phoneNumber && (
-                <Typography variant="caption" color="error" display="block" gutterBottom>
-                  {errors.phoneNumber}
-                </Typography>
-              )}
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                value={userDetails.password}
-                onChange={handleChange}
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <StyledTextField
-                required
-                fullWidth
-                name="confirmPassword"
-                label="Confirm Password"
-                type="password"
-                id="confirmPassword"
-                value={userDetails.confirmPassword}
-                onChange={handleChange}
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword}
-                InputProps={{
-                  startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControl component="fieldset" error={!!errors.gender}>
-                <FormLabel component="legend" sx={{ color: '#ffffff' }}>Gender</FormLabel>
-                <RadioGroup
-                  aria-label="gender"
-                  name="gender"
-                  value={userDetails.gender}
+      <FormContainer isFlipped={state.isFlipped} elevation={6}>
+        <FormSide>
+          <Typography component="h1" variant="h4" align="center" sx={{ color: '#ffff', mb: 4, fontWeight: 'bold' }}>
+            SIGN-UP
+          </Typography>
+          <img 
+  src="https://collabcultimages.blob.core.windows.net/logo/whitelogo.png?sp=r&st=2024-08-27T14:33:14Z&se=2030-08-27T22:33:14Z&sv=2022-11-02&sr=b&sig=%2Bs5heSUazhVROgtN4Pz2EhGlGUdYS5ULxkMb0h9fpgY%3D" 
+  alt="Logo" 
+  style={{ display: 'block', margin: '0 auto 20px', height: '50px',width:'50px', paddingBottom:'10px' }} 
+/>
+          <Box component="form" noValidate onSubmit={handleSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  id="name"
+                  label="Name"
+                  name="name"
+                  autoComplete="name"
+                  value={state.name}
                   onChange={handleChange}
-                  row
-                >
-                  <FormControlLabel
-  value="male"
-  control={<Radio sx={{ color: '#21CBF3' }} />}
-  label="Male"
-  sx={{ color: 'white' }}
-/>
-<FormControlLabel
-  value="female"
-  control={<Radio sx={{ color: '#21CBF3' }} />}
-  label="Female"
-  sx={{ color: 'white' }}
-/>
-
-                </RadioGroup>
-                {errors.gender && (
+                  error={!!state.errors.name}
+                  helperText={state.errors.name}
+                  InputProps={{
+                    startAdornment: <AccountCircleOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  id="username"
+                  label="Username"
+                  name="username"
+                  autoComplete="username"
+                  value={state.username}
+                  onChange={handleChange}
+                  error={!!state.errors.username}
+                  helperText={state.errors.username}
+                  InputProps={{
+                    startAdornment: <PersonAddOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email"
+                  name="email"
+                  autoComplete="email"
+                  value={state.email}
+                  onChange={handleChange}
+                  error={!!state.errors.email}
+                  helperText={state.errors.email}
+                  InputProps={{
+                    startAdornment: <EmailOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StyledPhoneInput
+                  country={'us'}
+                  value={state.phoneNumber}
+                  onChange={handlePhoneChange}
+                  inputStyle={{ width: '100%', backgroundColor: 'black' }}
+                  isValid={(value, country) => value.length === 9}
+                  inputProps={{
+                    error: state.errors.phoneNumber ? true : undefined,
+                  }}
+                />
+                {state.errors.phoneNumber && (
                   <Typography variant="caption" color="error" display="block" gutterBottom>
-                    {errors.gender}
+                    {state.errors.phoneNumber}
                   </Typography>
                 )}
-              </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  value={state.password}
+                  onChange={handleChange}
+                  error={!!state.errors.password}
+                  helperText={state.errors.password}
+                  InputProps={{
+                    startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  name="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  id="confirmPassword"
+                  value={state.confirmPassword}
+                  onChange={handleChange}
+                  error={!!state.errors.confirmPassword}
+                  helperText={state.errors.confirmPassword}
+                  InputProps={{
+                    startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl component="fieldset" error={!!state.errors.gender}>
+                  <FormLabel component="legend" sx={{ color: '#ffffff' }}>Gender</FormLabel>
+                  <RadioGroup
+                    aria-label="gender"
+                    name="gender"
+                    value={state.gender}
+                    onChange={handleChange}
+                    row
+                  >
+                    <FormControlLabel
+                      value="male"
+                      control={<Radio sx={{ color: '#21CBF3' }} />}
+                      label="Male"
+                      sx={{ color: 'white' }}
+                    />
+                    <FormControlLabel
+                      value="female"
+                      control={<Radio sx={{ color: '#21CBF3' }} />}
+                      label="Female"
+                      sx={{ color: 'white' }}
+                    />
+                  </RadioGroup>
+                  {state.errors.gender && (
+                    <Typography variant="caption" color="error" display="block" gutterBottom>
+                      {state.errors.gender}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
             </Grid>
-          </Grid>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={userDetails.active}
-                onChange={handleChange}
-                name="active"
-                sx={{
-                  color: '#21CBF3',
-                  '&.Mui-checked': {
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={state.active}
+                  onChange={handleChange}
+                  name="active"
+                  sx={{
                     color: '#21CBF3',
-                  },
-                }}
-              />
-            }
-            label={<Typography sx={{ color: '#ffffff' }}>I hereby declare that the above information provided is true and correct</Typography>}
-            sx={{ mt: 2, mb: 2 }}
-          />
-          <BubbleButtonContainer>
-            <BubbleButton ref={buttonRef} type="submit">
-              Register
-            </BubbleButton>
-            <BubbleEffectContainer style={{ filter: 'url(#goo)' }}>
-              {[...Array(3)].map((_, i) => (
-                <TopLeftCircle key={`tl-${i}`} ref={el => topLeftCirclesRef.current[i] = el} />
-              ))}
-              {[...Array(3)].map((_, i) => (
-                <BottomRightCircle key={`br-${i}`} ref={el => bottomRightCirclesRef.current[i] = el} />
-              ))}
-            </BubbleEffectContainer>
-          </BubbleButtonContainer>
-        </Box>
+                    '&.Mui-checked': {
+                      color: '#21CBF3',
+                    },
+                  }}
+                />
+              }
+              label={<Typography sx={{ color: '#ffffff' }}>I hereby declare that the above information provided is true and correct</Typography>}
+              sx={{ mt: 2, mb: 2 }}
+            />
+            <BubbleButtonContainer>
+              <BubbleButton ref={buttonRef} type="submit">
+                Register
+              </BubbleButton>
+              <BubbleEffectContainer style={{ filter: 'url(#goo)' }}>
+                {[...Array(3)].map((_, i) => (
+                  <TopLeftCircle key={`tl-${i}`} ref={el => topLeftCirclesRef.current[i] = el} />
+                ))}
+                {[...Array(3)].map((_, i) => (
+                  <BottomRightCircle key={`br-${i}`} ref={el => bottomRightCirclesRef.current[i] = el} />
+                ))}
+              </BubbleEffectContainer>
+            </BubbleButtonContainer>
+            <Typography
+              variant="body2"
+              align="center"
+              sx={{ color: '#21CBF3', mt: 2, cursor: 'pointer' }}
+              onClick={() => dispatch({ type: 'SET_IS_FLIPPED', isFlipped: true })}
+            >
+              Already Signed In? Click here to login.
+            </Typography>
+          </Box>
+        </FormSide>
+        
+        <FormSide isBack>
+          <Typography component="h1" variant="h4" align="center" sx={{ color: '#ffff', mb: 4, fontWeight: 'bold',paddingTop:'40px' }}>
+            LOG IN
+          </Typography>
+          <img 
+  src="https://collabcultimages.blob.core.windows.net/logo/whitelogo.png?sp=r&st=2024-08-27T14:33:14Z&se=2030-08-27T22:33:14Z&sv=2022-11-02&sr=b&sig=%2Bs5heSUazhVROgtN4Pz2EhGlGUdYS5ULxkMb0h9fpgY%3D" 
+  alt="Logo" 
+  style={{ display: 'block', margin: '0 auto 20px', height: '50px',width:'50px' }} 
+/>
+          <Box component="form" noValidate onSubmit={handleLoginSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  id="loginUsername"
+                  label="Username"
+                  name="username"
+                  autoComplete="username"
+                  value={state.username}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: <PersonAddOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <StyledTextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="loginPassword"
+                  value={state.password}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: <LockOutlinedIcon sx={{ color: '#21CBF3', mr: 1 }} />,
+                  }}
+                />
+              </Grid>
+            </Grid>
+            <BubbleButtonContainer>
+              <BubbleButton ref={buttonRef} type="submit" sx={{marginTop:'20px' }}>
+                Login
+              </BubbleButton>
+              <BubbleEffectContainer style={{ filter: 'url(#goo)' }}>
+                {[...Array(3)].map((_, i) => (
+                  <TopLeftCircle key={`tl-${i}`} ref={el => topLeftCirclesRef.current[i] = el} />
+                ))}
+                {[...Array(3)].map((_, i) => (
+                  <BottomRightCircle key={`br-${i}`} ref={el => bottomRightCirclesRef.current[i] = el} />
+                ))}
+              </BubbleEffectContainer>
+            </BubbleButtonContainer>
+            <Typography
+              variant="body2"
+              align="center"
+              sx={{ color: '#21CBF3', mt: 2, cursor: 'pointer' }}
+              onClick={() => dispatch({ type: 'SET_IS_FLIPPED', isFlipped: false })}
+            >
+              New here? Click here to register.
+            </Typography>
+          </Box>
+        </FormSide>
       </FormContainer>
     </Background>
   );

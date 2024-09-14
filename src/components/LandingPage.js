@@ -45,12 +45,28 @@ const LandingPage = () => {
     };
     window.addEventListener('scroll', handleScroll);
 
+    // Disable zooming and pinching
+    const disableZoom = (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', disableZoom, { passive: false });
+    document.addEventListener('touchmove', disableZoom, { passive: false });
+    document.addEventListener('touchend', disableZoom, { passive: false });
+
     // Simulate a loading process
     setTimeout(() => {
       setLoading(false);
     }, 2000); // Adjust the timeout as needed
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('touchstart', disableZoom);
+      document.removeEventListener('touchmove', disableZoom);
+      document.removeEventListener('touchend', disableZoom);
+    };
   }, []);
 
   return (

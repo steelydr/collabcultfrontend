@@ -1,8 +1,14 @@
 // src/components/HeroSection.js
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+
+const baseColors = [
+  'rgba(79, 195, 247, 0.3)',
+  'rgba(25, 118, 210, 0.3)',
+  'rgba(34, 139, 34, 0.1)',
+];
 
 const HeroSectionContainer = styled(Box)(({ theme }) => ({
   height: '100vh',
@@ -27,95 +33,10 @@ const AnimatedBackground = styled(Box)(({ theme }) => ({
   position: 'absolute',
   width: '100%',
   height: '100%',
-  '&::before, &::after': {
-    content: '""',
+  '& canvas': {
     position: 'absolute',
-    borderRadius: '50%',
-    opacity: 0.45,
-    animation: 'float 25s infinite ease-in-out',
-  },
-  '&::before': {
-    width: '400px',
-    height: '400px',
-    background: 'rgba(79, 195, 247, 0.3)',
-    top: '-50px',
-    left: '-50px',
-  },
-  '&::after': {
-    width: '400px',
-    height: '400px',
-    background: 'rgba(25, 118, 210, 0.3)',
-    bottom: '-50px',
-    right: '-50px',
-    animationDelay: '-15s',
-  },
-  '& .triangle': {
-    width: 0,
-    height: 0,
-    borderLeft: '100px solid transparent',
-    borderRight: '100px solid transparent',
-    borderBottom: '170px solid rgba(1, 77, 78, 0.6)',
-    position: 'absolute',
-    top: '5%',
-    left: '80%',
-    opacity: 0.55,
-    animation: 'float 20s infinite ease-in-out',
-    animationDelay: '-5s',
-  },
-  '& .circle': {
-    width: '150px',
-    height: '150px',
-    background: 'rgba(34, 139, 34, 0.4)',
-    borderRadius: '50%',
-    position: 'absolute',
-    top: '50%',
-    left: '30%',
-    opacity: 0.46,
-    animation: 'float 15s infinite ease-in-out',
-    animationDelay: '-10s',
-  },
-  // Media Queries for responsiveness
-  [theme.breakpoints.down('md')]: {
-    '&::before': {
-      width: '300px',
-      height: '300px',
-    },
-    '&::after': {
-      width: '300px',
-      height: '300px',
-    },
-    '& .triangle': {
-      borderLeft: '75px solid transparent',
-      borderRight: '75px solid transparent',
-      borderBottom: '130px solid rgba(1, 77, 78, 0.6)',
-    },
-    '& .circle': {
-      width: '100px',
-      height: '100px',
-    },
-  },
-  [theme.breakpoints.down('sm')]: {
-    '&::before': {
-      width: '200px',
-      height: '200px',
-    },
-    '&::after': {
-      width: '200px',
-      height: '200px',
-    },
-    '& .triangle': {
-      borderLeft: '50px solid transparent',
-      borderRight: '50px solid transparent',
-      borderBottom: '100px solid rgba(1, 77, 78, 0.6)',
-      top: '10%',
-      left: '70%',
-    },
-    '& .circle': {
-      width: '80px',
-      height: '80px',
-      top: '60%',
-      left: '25%',
-    },
+    top: 0,
+    left: 0,
   },
 }));
 
@@ -152,13 +73,113 @@ const StyledButton = styled(Button)(({ theme }) => ({
   '&:hover': {
     backgroundColor: '#21CBF3',
     color: '#000000',
-    transform: 'translateY(-3px)', // Slight lift effect on hover
     boxShadow: '0px 12px 20px rgba(0, 0, 0, 0.15)', // More pronounced shadow on hover
   },
 }));
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const canvasRef = useRef(null);
+
+  const getRandomColor = () => {
+    return baseColors[Math.floor(Math.random() * baseColors.length)];
+  };
+
+  const drawStar = (ctx, shape) => {
+    ctx.beginPath();
+    const outerRadius = shape.size / 2;
+    const innerRadius = outerRadius / 2.5;
+    for (let i = 0; i < 10; i++) {
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      const x = shape.x + radius * Math.cos(i * Math.PI / 5 - Math.PI / 2);
+      const y = shape.y + radius * Math.sin(i * Math.PI / 5 - Math.PI / 2);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+    ctx.strokeStyle = shape.color;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  };
+
+  const drawCircle = (ctx, shape) => {
+    ctx.beginPath();
+    ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2, false);
+    ctx.fillStyle = shape.color;
+    ctx.fill();
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const shapes = [];
+
+    const createShapes = () => {
+      for (let i = 0; i < 5; i++) {
+        shapes.push({
+          type: 'star',
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: 80 + Math.random() * 80, // Random star size between 60 and 140
+          color: getRandomColor(),
+          dx: 1 + Math.random(),
+          dy: 1 + Math.random(),
+        });
+        shapes.push({
+          type: 'circle',
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: 70 + Math.random() * 60, // Random circle size between 40 and 100
+          color: getRandomColor(),
+          dx: 1 + Math.random(),
+          dy: 1 + Math.random(),
+        });
+      }
+    };
+
+    const animateShapes = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      shapes.forEach((shape) => {
+        if (shape.type === 'star') {
+          drawStar(ctx, shape);
+        } else if (shape.type === 'circle') {
+          drawCircle(ctx, shape);
+        }
+
+        shape.x += shape.dx;
+        shape.y += shape.dy;
+
+        // Reverse direction if the shape hits the canvas bounds
+        if (shape.x + shape.size / 2 > canvas.width || shape.x - shape.size / 2 < 0) {
+          shape.dx = -shape.dx;
+        }
+        if (shape.y + shape.size / 2 > canvas.height || shape.y - shape.size / 2 < 0) {
+          shape.dy = -shape.dy;
+        }
+      });
+
+      requestAnimationFrame(animateShapes);
+    };
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    createShapes();
+    animateShapes();
+
+    window.addEventListener('resize', resizeCanvas);
+
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
 
   const handleJoinClick = () => {
     navigate('/register');
@@ -167,12 +188,11 @@ const HeroSection = () => {
   return (
     <HeroSectionContainer>
       <AnimatedBackground>
-        <Box className="triangle" />
-        <Box className="circle" />
+        <canvas ref={canvasRef}></canvas>
       </AnimatedBackground>
       <HeroContent>
         <AnimatedText variant="h2" component="h1" gutterBottom>
-          Connect Create Conquer
+          CONNECT  CREATE  CONQUER
         </AnimatedText>
         <Typography 
           variant="h5" 
@@ -183,6 +203,7 @@ const HeroSection = () => {
             fontWeight: 600, 
             fontSize: '1.5rem', 
             lineHeight: 1.5, 
+            zIndex:'3',
             color: '#013c3c' // Deep Teal for emphasis
           }}
         >
@@ -204,7 +225,7 @@ const HeroSection = () => {
           Stay Connected with us for more updates!
         </Typography>
 
-        <StyledButton variant="outlined" size="large" onClick={handleJoinClick}>
+        <StyledButton variant="outlined" size="large" onClick={handleJoinClick} sx={{ backgroundColor:'transparent'}}>
           Join Us
         </StyledButton>
       </HeroContent>

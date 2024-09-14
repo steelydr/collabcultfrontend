@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-
-import UpdateUser from './components/UpdateUser';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import CreateUser from './components/CreateUser';
 import LandingPage from './components/LandingPage';
+
+// Lazy load CollabCultPage
+const CollabCultPage = lazy(() => import('./components/CollabCultPage'));
 
 const App = () => {
   return (
@@ -14,7 +15,14 @@ const App = () => {
           <Routes>
             <Route exact path="/" element={<LandingPage />} />
             <Route path="/register" element={<CreateUser />} />
-            <Route path="/update/:id" element={<UpdateUser />} />
+            <Route
+              path="/userp"
+              element={
+                <Suspense fallback={<div>Loading...</div>}>
+                  <CollabCultPage />
+                </Suspense>
+              }
+            />
           </Routes>
         </div>
       </Router>
