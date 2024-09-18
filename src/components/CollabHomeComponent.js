@@ -9,9 +9,8 @@ import Sentiment from 'sentiment';
 
 import ShapesBackground from './ShapesBackground';
 import PostCard from './PostCard';
-import { SECRET_KEY } from './config';
+import config,{ SECRET_KEY } from './config';
 
-// Initialize sentiment analyzer
 const sentiment = new Sentiment();
 
 const analyzeContent = (content) => {
@@ -44,7 +43,7 @@ const CollabHomeComponent = () => {
       };
 
       try {
-        const response = await axios.post('http://localhost/api/posts', post);
+        const response = await axios.post(`${config.BACKEND_URL}/api/posts`, post);
         const createdPost = response.data.post;
 
         if (!createdPost.id) {
@@ -66,7 +65,7 @@ const CollabHomeComponent = () => {
 
           setTimeout(async () => {
             try {
-              await axios.delete(`http://localhost/api/posts/${createdPost.id}`);
+              await axios.delete(`${config.BACKEND_URL}/api/posts/${createdPost.id}`);
               setSnackbar({ open: true, message: 'Post deleted due to negative sentiment', severity: 'warning' });
             } catch (error) {
               console.error('Error deleting post:', error);
@@ -89,7 +88,7 @@ const CollabHomeComponent = () => {
     setTimeout(async () => {
       setIsLoading(true);
       try {
-        await axios.delete(`http://localhost/api/posts/${postId}`);
+        await axios.delete(`${config.BACKEND_URL}/api/posts/${postId}`);
         setSnackbar({ open: true, message: 'Post deleted successfully', severity: 'success' });
       } catch (error) {
         console.error('Error deleting post:', error.response ? error.response.data : error.message);
@@ -113,7 +112,7 @@ const CollabHomeComponent = () => {
   
     while (attempts < maxRetries) {
       try {
-        const response = await axios.put(`http://localhost/api/posts/${postId}`, 
+        const response = await axios.put(`${config.BACKEND_URL}/api/posts/${postId}`, 
         { content: newContent }, {
           timeout: 5000, // 5 seconds timeout for each request
         });
@@ -150,7 +149,7 @@ const CollabHomeComponent = () => {
     const fetchPosts = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('http://localhost/api/posts');
+        const response = await axios.get(`${config.BACKEND_URL}/api/posts`);
         let data = response.data;
         if (Array.isArray(data)) {
           data = data.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
@@ -186,7 +185,7 @@ const CollabHomeComponent = () => {
     }
 
     // Set up SSE connection
-    eventSourceRef.current = new EventSource('http://localhost/api/posts/stream');
+    eventSourceRef.current = new EventSource(`${config.BACKEND_URL}/api/posts/stream`);
 
     eventSourceRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);

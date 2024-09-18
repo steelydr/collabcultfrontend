@@ -8,12 +8,11 @@ import ShareIcon from '@mui/icons-material/Share';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import EmojiConvertor from 'emoji-js';
-// Initialize emoji-js instance
+import config from './config';
 const emoji = new EmojiConvertor();
 emoji.init_env();
 emoji.replace_mode = 'unified';
 
-// Styled components
 const OverlayContainer = styled(Box)(({ theme }) => ({
   position: 'absolute',
   top: '50%',
@@ -122,7 +121,7 @@ const UserPostsOverlay = ({
     async (postId) => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost/api/comments/post/${postId}`);
+        const response = await axios.get(`${config.BACKEND_URL}/api/comments/post/${postId}`);
         setComments(response.data.comments);
       } catch (error) {
         console.error('Error fetching comments:', error);
@@ -140,7 +139,7 @@ const UserPostsOverlay = ({
     (postId) => {
       if (eventSourceRef.current) return; // Prevent multiple subscriptions
 
-      const sse = new EventSource(`http://localhost/api/comments/stream`);
+      const sse = new EventSource(`${config.BACKEND_URL}/api/comments/stream`);
       eventSourceRef.current = sse;
 
       sse.addEventListener('comment-update', (event) => {
@@ -194,7 +193,7 @@ const UserPostsOverlay = ({
         user_id: currentUser.id,
         content: newCommentContent,
       };
-      await axios.post('http://localhost/api/comments', newCommentData);
+      await axios.post(`${config.BACKEND_URL}/api/comments`, newCommentData);
       setNewCommentContent(''); // Clear the input field after successful submission
     } catch (error) {
       console.error('Error creating comment:', error);
@@ -205,7 +204,7 @@ const UserPostsOverlay = ({
       const updatedCommentData = {
         content: editingComment.content,
       };
-      await axios.put(`http://localhost/api/comments/${commentId}`, updatedCommentData);
+      await axios.put(`${config.BACKEND_URL}/api/comments/${commentId}`, updatedCommentData);
       setEditingComment(null);
     } catch (error) {
       console.error('Error updating comment:', error);
@@ -214,7 +213,7 @@ const UserPostsOverlay = ({
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await axios.delete(`http://localhost/api/comments/${commentId}`);
+      await axios.delete(`${config.BACKEND_URL}/api/comments/${commentId}`);
     } catch (error) {
       console.error('Error deleting comment:', error);
     }

@@ -8,7 +8,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { SECRET_KEY } from './config';
+import config,{ SECRET_KEY } from './config';
 
 // Lazy load components
 const ShapesBackground = lazy(() => import('./ShapesBackground'));
@@ -158,10 +158,12 @@ const MyPosts = () => {
         const userId = decryptedData.id;
         setCurrentUser(decryptedData);
         
-        const response = await axios.get(`http://localhost:80/api/users/${userId}`, {
-          headers: { Accept: 'application/json' },
-        });
-        console.log(response.data)
+        const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
+          headers: {
+            Accept: 'application/json',
+          },
+        });        
+        console.log(response.data.user)
         
         if (response.data.user.profilePictureType) {
           setUserProfilePicture(response.data.user.profilePictureType);

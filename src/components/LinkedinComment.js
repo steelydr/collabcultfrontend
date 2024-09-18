@@ -8,6 +8,7 @@ import {
   TextField,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import config from './config';
 
 const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
   const { id, user, content, createdDate } = comment;
@@ -20,7 +21,7 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
   useEffect(() => {
     const fetchCommentUserDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost/api/users/${user.id}`);
+        const response = await axios.get(`${config.BACKEND_URL}/api/users/${user.id}`);
         const commentUser = response.data.user;
         setCommentUserData(commentUser); // Storing complete user data including profilePictureType
       } catch (error) {
@@ -62,7 +63,7 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
     if (editedComment.trim() !== content) {
       setIsLoading(true);
       try {
-        await axios.put(`http://localhost/api/comments/${id}`, {
+        await axios.put(`${config.BACKEND_URL}/api/comments/${id}`, {
           content: editedComment,
         });
         setIsEditing(false);
@@ -78,7 +79,7 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
   const handleDeleteComment = async () => {
     setIsLoading(true);
     try {
-      await axios.delete(`http://localhost/api/comments/${id}`);
+      await axios.delete(`${config.BACKEND_URL}/api/comments/${id}`);
       setIsLoading(false);
       fetchComments(); // Re-fetch comments after deleting
     } catch (error) {

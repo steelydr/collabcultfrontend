@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import AvatarEditor from 'react-avatar-editor';
-import { SECRET_KEY } from './config';
+import config, { SECRET_KEY } from './config';
 import { styled } from '@mui/material/styles';
 import {
   CircularProgress,
@@ -25,7 +25,6 @@ import { CiLogout } from "react-icons/ci";
 import { useNavigate } from 'react-router-dom';
 
 const UpdateUser = () => {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:80';
 
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,11 +83,14 @@ const UpdateUser = () => {
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         const userId = decryptedData.id;
 
-        const response = await axios.get(`${backendUrl}/api/users/${userId}`, {
-          headers: {
-            Accept: 'application/json',
-          },
-        });
+        
+const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
+  headers: {
+    Accept: 'application/json',
+  },
+});
+
+        
 
         if (response.status === 200) {
           setUserDetails(response.data);
@@ -113,7 +115,7 @@ const UpdateUser = () => {
     } finally {
       setLoading(false);
     }
-  }, [backendUrl]);
+  }, []);
 
   useEffect(() => {
     const encryptedData = localStorage.getItem('user');
@@ -145,7 +147,7 @@ const UpdateUser = () => {
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         const userId = decryptedData.id;
 
-        const response = await axios.patch(`${backendUrl}/api/users/${userId}`, editedDetails, {
+        const response = await axios.patch(`${config.BACKEND_URL}/api/users/${userId}`, editedDetails, {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',

@@ -24,7 +24,7 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 import CryptoJS from 'crypto-js';
-import { SECRET_KEY } from './config';
+import config,{ SECRET_KEY } from './config';
 
 const LazyAvatar = lazy(() => import('@mui/material/Avatar'));
 const LazyLinkedInComment = lazy(() => import('./LinkedinComment'));
@@ -67,7 +67,7 @@ const PostCard = ({ post, onDelete, onUpdate, isLoading }) => {
 
   const fetchUserDetails = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost/api/users/${userId}`);
+      const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`);
       setUserData(response.data.user);
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -77,7 +77,7 @@ const PostCard = ({ post, onDelete, onUpdate, isLoading }) => {
 
   const fetchComments = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost/api/comments/post/${id}`);
+      const response = await axios.get(`${config.BACKEND_URL}/api/comments/post/${id}`);
       setComments(response.data.comments || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -90,7 +90,7 @@ const PostCard = ({ post, onDelete, onUpdate, isLoading }) => {
   }, [fetchUserDetails, fetchComments]);
 
   useEffect(() => {
-    const eventSource = new EventSource('http://localhost/api/posts/stream');
+    const eventSource = new EventSource(`${config.BACKEND_URL}/api/posts/stream`);
 
     const handlePostUpdate = (updatedPost) => {
       if (updatedPost.id === id) {
@@ -143,7 +143,7 @@ const PostCard = ({ post, onDelete, onUpdate, isLoading }) => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost/api/posts/${id}`);
+      await axios.delete(`${config.BACKEND_URL}/api/posts/${id}`);
       onDelete(id);
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -155,7 +155,7 @@ const PostCard = ({ post, onDelete, onUpdate, isLoading }) => {
   const handlePostComment = async () => {
     if (!postState.newComment.trim()) return;
     try {
-      await axios.post(`http://localhost/api/comments`, {
+      await axios.post(`${config.BACKEND_URL}/api/comments`, {
         post_id: id,
         user_id: currentUser.id,
         content: postState.newComment,

@@ -4,7 +4,6 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import CreateUser from './components/CreateUser';
 import LandingPage from './components/LandingPage';
 
-// Lazy load CollabCultPage
 const CollabCultPage = lazy(() => import('./components/CollabCultPage'));
 
 const App = () => {
@@ -13,10 +12,10 @@ const App = () => {
       <Router>
         <div>
           <Routes>
-            <Route exact path="/" element={<LandingPage />} />
+            <Route exact path="/cc" element={<LandingPage />} />
             <Route path="/register" element={<CreateUser />} />
             <Route
-              path="/userp"
+              path="/"
               element={
                 <Suspense fallback={<div>Loading...</div>}>
                   <CollabCultPage />
