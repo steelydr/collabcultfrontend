@@ -258,7 +258,7 @@ const CollabHomeComponent = () => {
 
         {posts.length > 0 ? (
           <>
-            {(userData ? posts : posts.slice(0, 2)).map((post) => (
+            {(userData ? posts : posts.slice(0, 4)).map((post) => (
               <AnimatedPostCard
                 key={post.id}
                 isdeleting={deleteAnimation.postId === post.id && deleteAnimation.active ? 1 : 0}
