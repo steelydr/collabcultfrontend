@@ -8,7 +8,7 @@ const YOUTUBE_CHANNEL_ID = 'UC5Izf1mIZXc0cCgJuxH-iKA'; // Replace with the corre
 const YOUTUBE_API_KEY = 'AIzaSyC3sbZxElDd9x9LQ-l8si0hbNKQjPLdMWM';
 const MAX_RESULTS = 3; // Number of videos to display
 
-const LOCAL_STORAGE_KEYS = {
+const SESSION_STORAGE_KEYS = {
   videos: 'youtube_videos',
   workshops: 'workshops_data',
   events: 'events_data',
@@ -26,8 +26,8 @@ const OfferSection = () => {
     const now = new Date().getTime();
 
     const fetchYouTubeVideos = async () => {
-      const cachedVideos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.videos));
-      const cachedTimestamp = localStorage.getItem(LOCAL_STORAGE_KEYS.timestamp);
+      const cachedVideos = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEYS.videos));
+      const cachedTimestamp = sessionStorage.getItem(SESSION_STORAGE_KEYS.timestamp);
 
       if (cachedVideos && now - cachedTimestamp < CACHE_DURATION) {
         setVideos(cachedVideos);
@@ -44,8 +44,8 @@ const OfferSection = () => {
           });
 
           setVideos(response.data.items);
-          localStorage.setItem(LOCAL_STORAGE_KEYS.videos, JSON.stringify(response.data.items));
-          localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+          sessionStorage.setItem(SESSION_STORAGE_KEYS.videos, JSON.stringify(response.data.items));
+          sessionStorage.setItem(SESSION_STORAGE_KEYS.timestamp, now);
         } catch (error) {
           console.error('Error fetching YouTube videos:', error);
           setError(`Failed to fetch YouTube videos: ${error.message}`);
@@ -54,8 +54,8 @@ const OfferSection = () => {
     };
 
     const fetchWorkshops = async () => {
-      const cachedWorkshops = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.workshops));
-      const cachedTimestamp = localStorage.getItem(LOCAL_STORAGE_KEYS.timestamp);
+      const cachedWorkshops = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEYS.workshops));
+      const cachedTimestamp = sessionStorage.getItem(SESSION_STORAGE_KEYS.timestamp);
 
       if (cachedWorkshops && now - cachedTimestamp < CACHE_DURATION) {
         setWorkshops(cachedWorkshops);
@@ -66,14 +66,14 @@ const OfferSection = () => {
 
           if (Array.isArray(response.data)) {
             setWorkshops(response.data);
-            localStorage.setItem(LOCAL_STORAGE_KEYS.workshops, JSON.stringify(response.data));
-            localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+            sessionStorage.setItem(SESSION_STORAGE_KEYS.workshops, JSON.stringify(response.data));
+            sessionStorage.setItem(SESSION_STORAGE_KEYS.timestamp, now);
           } else if (typeof response.data === 'object' && response.data !== null) {
             const workshopsArray = response.data.workshops || Object.values(response.data);
             if (Array.isArray(workshopsArray)) {
               setWorkshops(workshopsArray);
-              localStorage.setItem(LOCAL_STORAGE_KEYS.workshops, JSON.stringify(workshopsArray));
-              localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+              sessionStorage.setItem(SESSION_STORAGE_KEYS.workshops, JSON.stringify(workshopsArray));
+              sessionStorage.setItem(SESSION_STORAGE_KEYS.timestamp, now);
             } else {
               throw new Error('Unable to extract workshops array from the response');
             }
@@ -88,8 +88,8 @@ const OfferSection = () => {
     };
 
     const fetchEvents = async () => {
-      const cachedEvents = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.events));
-      const cachedTimestamp = localStorage.getItem(LOCAL_STORAGE_KEYS.timestamp);
+      const cachedEvents = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEYS.events));
+      const cachedTimestamp = sessionStorage.getItem(SESSION_STORAGE_KEYS.timestamp);
 
       if (cachedEvents && now - cachedTimestamp < CACHE_DURATION) {
         setEvents(cachedEvents);
@@ -100,14 +100,14 @@ const OfferSection = () => {
 
           if (Array.isArray(response.data)) {
             setEvents(response.data);
-            localStorage.setItem(LOCAL_STORAGE_KEYS.events, JSON.stringify(response.data));
-            localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+            sessionStorage.setItem(SESSION_STORAGE_KEYS.events, JSON.stringify(response.data));
+            sessionStorage.setItem(SESSION_STORAGE_KEYS.timestamp, now);
           } else if (typeof response.data === 'object' && response.data !== null) {
             const eventsArray = response.data.events || Object.values(response.data);
             if (Array.isArray(eventsArray)) {
               setEvents(eventsArray);
-              localStorage.setItem(LOCAL_STORAGE_KEYS.events, JSON.stringify(eventsArray));
-              localStorage.setItem(LOCAL_STORAGE_KEYS.timestamp, now);
+              sessionStorage.setItem(SESSION_STORAGE_KEYS.events, JSON.stringify(eventsArray));
+              sessionStorage.setItem(SESSION_STORAGE_KEYS.timestamp, now);
             } else {
               throw new Error('Unable to extract events array from the response');
             }
