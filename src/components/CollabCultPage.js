@@ -8,17 +8,18 @@ import Box from '@mui/material/Box';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { styled } from '@mui/system';
+import { useMediaQuery } from '@mui/material';
 import axios from 'axios';
-import { useTrie } from '../lib/useTrie'
+import { useTrie } from '../lib/useTrie';
 
+import { Helmet } from 'react-helmet';
 import config from './config';
-// Lazy load icons
-const MdSearch = lazy(() => import('react-icons/md').then(module => ({ default: module.MdSearch })));
-const MdEditNote = lazy(() => import('react-icons/md').then(module => ({ default: module.MdEditNote })));
-const IoSettingsOutline = lazy(() => import('react-icons/io5').then(module => ({ default: module.IoSettingsOutline })));
-const AiFillHome = lazy(() => import('react-icons/ai').then(module => ({ default: module.AiFillHome })));
 
-// Lazy load other components
+const MdSearch = lazy(() => import('react-icons/md').then((module) => ({ default: module.MdSearch })));
+const MdEditNote = lazy(() => import('react-icons/md').then((module) => ({ default: module.MdEditNote })));
+const IoSettingsOutline = lazy(() => import('react-icons/io5').then((module) => ({ default: module.IoSettingsOutline })));
+const AiFillHome = lazy(() => import('react-icons/ai').then((module) => ({ default: module.AiFillHome })));
+
 const UpdateUser = lazy(() => import('./UpdateUser'));
 const MyPosts = lazy(() => import('./MyPosts'));
 const CollabHomeComponent = lazy(() => import('./CollabHomeComponent'));
@@ -81,12 +82,14 @@ const CustomListItem = styled('li')(({ theme }) => ({
   },
 }));
 
-const CollabCultpage = () => {
+const CollabCultPage = () => {
   const [activeComponent, setActiveComponent] = useState('home');
   const [inputValue, setInputValue] = useState('');
   const [userSuggestions, setUserSuggestions] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+
+  const isMobile = useMediaQuery('(max-width: 600px)');
 
   useEffect(() => {
     const userItem = localStorage.getItem('user');
@@ -107,7 +110,7 @@ const CollabCultpage = () => {
         if (Array.isArray(response.data.userDetails)) {
           const suggestionsWithIds = response.data.userDetails.map((user, index) => ({
             ...user,
-            id: `${user.name || 'unknown'}-${index}`
+            id: `${user.name || 'unknown'}-${index}`,
           }));
           setUserSuggestions(suggestionsWithIds);
         } else {
@@ -137,92 +140,118 @@ const CollabCultpage = () => {
     }
   }, [activeComponent, inputValue, selectedUser, isUserLoggedIn]);
 
-  const handleViewChange = useCallback((view) => {
-    if (isUserLoggedIn) {
-      setActiveComponent(view);
-      if (view !== 'userDetails') {
-        setSelectedUser(null);
-        setInputValue('');
+  const handleViewChange = useCallback(
+    (view) => {
+      if (isUserLoggedIn) {
+        setActiveComponent(view);
+        if (view !== 'userDetails') {
+          setSelectedUser(null);
+          setInputValue('');
+        }
       }
-    }
-  }, [isUserLoggedIn]);
+    },
+    [isUserLoggedIn]
+  );
 
-  const handleInputChange = useCallback((event, newInputValue) => {
-    if (isUserLoggedIn) {
-      setInputValue(newInputValue);
-      if (newInputValue === '') {
-        setActiveComponent('home');
-        setSelectedUser(null);
+  const handleInputChange = useCallback(
+    (event, newInputValue) => {
+      if (isUserLoggedIn) {
+        setInputValue(newInputValue);
+        if (newInputValue === '') {
+          setActiveComponent('home');
+          setSelectedUser(null);
+        }
       }
-    }
-  }, [isUserLoggedIn]);
+    },
+    [isUserLoggedIn]
+  );
 
-  const handleUserSelect = useCallback((event, newValue) => {
-    if (isUserLoggedIn) {
-      setSelectedUser(newValue);
-      if (newValue) {
-        setActiveComponent('userDetails');
-        setInputValue(newValue.name || '');
+  const handleUserSelect = useCallback(
+    (event, newValue) => {
+      if (isUserLoggedIn) {
+        setSelectedUser(newValue);
+        if (newValue) {
+          setActiveComponent('userDetails');
+          setInputValue(newValue.name || '');
+        }
       }
-    }
-  }, [isUserLoggedIn]);
+    },
+    [isUserLoggedIn]
+  );
 
   const { filteredSuggestions } = useTrie(userSuggestions, inputValue);
 
   return (
-    <div>
-      <AppBar position="static" sx={{ bgcolor: 'transparent', boxShadow: 'none' }}>
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginLeft: '250px', marginRight: '250px' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <img
-              src="https://collabcultimages.blob.core.windows.net/logo/whitelogo.png?sp=r&st=2024-08-27T14:33:14Z&se=2030-08-27T22:33:14Z&sv=2022-11-02&sr=b&sig=%2Bs5heSUazhVROgtN4Pz2EhGlGUdYS5ULxkMb0h9fpgY%3D"
-              alt="CollabCult Logo"
-              style={{ height: '30px', marginRight: '10px' }}
-            />
-            {isUserLoggedIn && (
-              <Suspense fallback={<CircularProgress size={20} />}>
-                <StyledAutocomplete
-                  freeSolo
-                  options={filteredSuggestions}
-                  getOptionLabel={(option) => (option && option.name) || ''}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="standard"
-                      placeholder="Search users..."
-                      InputProps={{
-                        ...params.InputProps,
-                        startAdornment: (
-                          <IconButton sx={{ color: 'white' }}>
-                            <MdSearch />
-                          </IconButton>
-                        ),
-                      }}
-                    />
-                  )}
-                  renderOption={(props, option) => (
-                    <CustomListItem {...props} key={option.id}>
-                      <StyledAvatar src={`${option.profilePictureType}`} alt={option.name} />
-                      <div>
-                        <strong>{option.name || 'Unknown'}</strong>
-                        <br />
-                        {option.headline || 'No headline'}
-                      </div>
-                    </CustomListItem>
-                  )}
-                  inputValue={inputValue}
-                  onInputChange={handleInputChange}
-                  onChange={handleUserSelect}
-                  value={selectedUser}
-                />
-              </Suspense>
-            )}
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {isUserLoggedIn && (
-              <>
+    <>
+      <Helmet>
+        <title>{activeComponent === 'editProfile' ? 'Edit Profile - CollabCult' : 'CollabCult'}</title>
+        <meta
+          name="description"
+          content="Connect, collaborate, and create with like-minded professionals on CollabCult."
+        />
+      </Helmet>
+      <div>
+        <AppBar position="static" sx={{ bgcolor: 'transparent', boxShadow: 'none' }}>
+          <Toolbar
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingLeft: isMobile ? '16px' : '250px',
+              paddingRight: isMobile ? '16px' : '250px',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <img
+                src="https://collabcultimages.blob.core.windows.net/logo/whitelogo.png?sp=r&st=2024-08-27T14:33:14Z&se=2030-08-27T22:33:14Z&sv=2022-11-02&sr=b&sig=%2Bs5heSUazhVROgtN4Pz2EhGlGUdYS5ULxkMb0h9fpgY%3D"
+                alt="CollabCult Logo"
+                style={{ height: '30px', width: 'auto', marginRight: '10px' }}
+              />
+              {isUserLoggedIn && (
                 <Suspense fallback={<CircularProgress size={20} />}>
+                  <StyledAutocomplete
+                    freeSolo
+                    options={filteredSuggestions}
+                    getOptionLabel={(option) => (option && option.name) || ''}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        variant="standard"
+                        placeholder="Search users..."
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <IconButton sx={{ color: 'white' }}>
+                              <Suspense fallback={<CircularProgress size={20} />}>
+                                <MdSearch />
+                              </Suspense>
+                            </IconButton>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <CustomListItem {...props} key={option.id}>
+                        <StyledAvatar src={option.profilePictureType} alt={option.name} />
+                        <div>
+                          <strong>{option.name || 'Unknown'}</strong>
+                          <br />
+                          {option.headline || 'No headline'}
+                        </div>
+                      </CustomListItem>
+                    )}
+                    inputValue={inputValue}
+                    onInputChange={handleInputChange}
+                    onChange={handleUserSelect}
+                    value={selectedUser}
+                  />
+                </Suspense>
+              )}
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {isUserLoggedIn && (
+                <>
                   <IconButton
                     onClick={() => handleViewChange('home')}
                     sx={{
@@ -231,10 +260,10 @@ const CollabCultpage = () => {
                       transition: 'color 0.3s ease',
                     }}
                   >
-                    <AiFillHome size={24} />
+                    <Suspense fallback={<CircularProgress size={20} />}>
+                      <AiFillHome size={24} />
+                    </Suspense>
                   </IconButton>
-                </Suspense>
-                <Suspense fallback={<CircularProgress size={20} />}>
                   <IconButton
                     onClick={() => handleViewChange('posts')}
                     sx={{
@@ -243,10 +272,10 @@ const CollabCultpage = () => {
                       transition: 'color 0.3s ease',
                     }}
                   >
-                    <MdEditNote size={30} />
+                    <Suspense fallback={<CircularProgress size={20} />}>
+                      <MdEditNote size={30} />
+                    </Suspense>
                   </IconButton>
-                </Suspense>
-                <Suspense fallback={<CircularProgress size={20} />}>
                   <IconButton
                     onClick={() => handleViewChange('editProfile')}
                     sx={{
@@ -254,23 +283,25 @@ const CollabCultpage = () => {
                       transition: 'color 0.3s ease',
                     }}
                   >
-                    <IoSettingsOutline  size={24} />
+                    <Suspense fallback={<CircularProgress size={20} />}>
+                      <IoSettingsOutline size={24} />
+                    </Suspense>
                   </IconButton>
-                </Suspense>
-              </>
-            )}
-          </Box>
-        </Toolbar>
-      </AppBar>
+                </>
+              )}
+            </Box>
+          </Toolbar>
+        </AppBar>
 
-      <Suspense fallback={<CircularProgress sx={{ display: 'block', margin: 'auto', marginTop: '20px' }} />}>
-        {(!isUserLoggedIn || activeComponent === 'home') && <CollabHomeComponent />}
-        {isUserLoggedIn && activeComponent === 'posts' && <MyPosts searchQuery={inputValue} />}
-        {isUserLoggedIn && activeComponent === 'editProfile' && <UpdateUser />}
-        {isUserLoggedIn && activeComponent === 'userDetails' && <CollabCultUsersList user={selectedUser} />}
-      </Suspense>
-    </div>
+        <Suspense fallback={<CircularProgress sx={{ display: 'block', margin: 'auto', marginTop: '20px' }} />}>
+          {(!isUserLoggedIn || activeComponent === 'home') && <CollabHomeComponent />}
+          {isUserLoggedIn && activeComponent === 'posts' && <MyPosts searchQuery={inputValue} />}
+          {isUserLoggedIn && activeComponent === 'editProfile' && <UpdateUser />}
+          {isUserLoggedIn && activeComponent === 'userDetails' && <CollabCultUsersList user={selectedUser} />}
+        </Suspense>
+      </div>
+    </>
   );
 };
 
-export default CollabCultpage;
+export default CollabCultPage;

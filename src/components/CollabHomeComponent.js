@@ -9,7 +9,7 @@ import Sentiment from 'sentiment';
 
 import ShapesBackground from './ShapesBackground';
 import PostCard from './PostCard';
-import config,{ SECRET_KEY } from './config';
+import config, { SECRET_KEY } from './config';
 
 const sentiment = new Sentiment();
 
@@ -27,7 +27,7 @@ const CollabHomeComponent = () => {
   const [deleteAnimation, setDeleteAnimation] = useState({ postId: null, active: false });
   const navigate = useNavigate();
   const eventSourceRef = useRef(null);
-  
+
   const handleRegisterLogin = () => {
     navigate('/register');
   };
@@ -101,25 +101,22 @@ const CollabHomeComponent = () => {
   };
 
   const handleUpdatePost = async (postId, newContent) => {
-    const maxRetries = 3; // Number of retries
+    const maxRetries = 3;
     let attempts = 0;
-    const retryDelay = 1000; // Delay between retries in milliseconds
-  
+    const retryDelay = 1000;
+
     setIsLoading(true);
-    
-    // Function to add delay
+
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  
+
     while (attempts < maxRetries) {
       try {
-        const response = await axios.put(`${config.BACKEND_URL}/api/posts/${postId}`, 
-        { content: newContent }, {
-          timeout: 5000, // 5 seconds timeout for each request
-        });
-  
+        const response = await axios.put(`${config.BACKEND_URL}/api/posts/${postId}`,
+          { content: newContent }, { timeout: 5000 });
+
         if (response.data && response.data.message) {
           setSnackbar({ open: true, message: response.data.message, severity: 'success' });
-          break; // Exit the loop if successful
+          break;
         } else {
           throw new Error('Unexpected response format');
         }
@@ -127,23 +124,21 @@ const CollabHomeComponent = () => {
         attempts += 1;
         if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
           console.warn(`Retrying attempt ${attempts} due to timeout...`);
-          await delay(retryDelay); // Wait before retrying
+          await delay(retryDelay);
         } else {
           console.error('Error updating post:', error);
           setSnackbar({ open: true, message: `Failed to update post: ${error.message}`, severity: 'error' });
-          break; // Exit the loop on non-timeout errors
+          break;
         }
       }
     }
-  
-    // After retries are exhausted
+
     if (attempts === maxRetries) {
       setSnackbar({ open: true, message: 'Failed to update post please retry or wait.', severity: 'error' });
     }
-  
+
     setIsLoading(false);
   };
-  
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -184,7 +179,6 @@ const CollabHomeComponent = () => {
       setUserData(null);
     }
 
-    // Set up SSE connection
     eventSourceRef.current = new EventSource(`${config.BACKEND_URL}/api/posts/stream`);
 
     eventSourceRef.current.onmessage = (event) => {
@@ -262,10 +256,10 @@ const CollabHomeComponent = () => {
               <AnimatedPostCard
                 key={post.id}
                 isdeleting={deleteAnimation.postId === post.id && deleteAnimation.active ? 1 : 0}
-                >
-                <PostCard 
-                  post={post} 
-                  onDelete={handleDeletePost} 
+              >
+                <PostCard
+                  post={post}
+                  onDelete={handleDeletePost}
                   onUpdate={handleUpdatePost}
                   isLoading={isLoading}
                   isNegative={analyzeContent(post.content)}
@@ -280,7 +274,7 @@ const CollabHomeComponent = () => {
                 <StyledButton
                   variant="contained"
                   onClick={handleRegisterLogin}
-                  sx={{ mt: 2 }} 
+                  sx={{ mt: 2 }}
                 >
                   Login
                 </StyledButton>
@@ -344,15 +338,14 @@ const PostsContainer = styled(Box)({
   flexDirection: 'column',
   alignItems: 'center',
   maxWidth: '600px',
+  boxSizing:'border-box',
   margin: '10px auto 0',
 });
 
 const CreatePostCard = styled(Card)({
   width: '100%',
-  marginLeft:'30px',
   marginBottom: '20px',
   borderRadius: '8px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
   backgroundColor: '#1a1a1a',
 });
 
@@ -375,14 +368,12 @@ const StyledTextField = styled(TextField)({
 
 const StyledTypography = styled(Typography)({
   fontSize: '16px',
-  fontWeight:'400',
+  fontWeight: '400',
   color: '#21CBF3',
-  marginTop: '10px',
   textAlign: 'center',
 });
 
 const StyledButton = styled(Button)({
-  color: 'black',
   backgroundColor: '#21CBF3',
   '&:hover': {
     backgroundColor: '#1BA0CC',
@@ -422,7 +413,6 @@ const FooterContent = styled(Box)({
   maxWidth: '1200px',
   textAlign: 'center',
   marginBottom: '20px',
-  padding: '0 20px',
 });
 
 const FooterTitle = styled(Typography)({
