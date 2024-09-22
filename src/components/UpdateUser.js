@@ -20,12 +20,10 @@ import {
   MenuItem,
 } from '@mui/material';
 import ShapesBackground from './ShapesBackground';
-
 import { CiLogout } from "react-icons/ci";
 import { useNavigate } from 'react-router-dom';
 
 const UpdateUser = () => {
-
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,10 +34,9 @@ const UpdateUser = () => {
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
   
-
   const [editedDetails, setEditedDetails] = useState({
     name: '',
-    gender: '',
+    gender: 'Male', // Default value set to Male
     address: '',
     headline: '',
     summary: '',
@@ -56,7 +53,6 @@ const UpdateUser = () => {
     localStorage.removeItem('user');
     setSnackbarMessage('Logged out successfully');
     setSnackbarOpen(true);
-    // Redirect to login page or home page after logout
     navigate('/register');  // Adjust this path as needed
   };
 
@@ -83,20 +79,17 @@ const UpdateUser = () => {
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         const userId = decryptedData.id;
 
-        
-const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
-  headers: {
-    Accept: 'application/json',
-  },
-});
-
-        
+        const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
+          headers: {
+            Accept: 'application/json',
+          },
+        });
 
         if (response.status === 200) {
           setUserDetails(response.data);
           setEditedDetails({
             name: response.data.user.name || '',
-            gender: response.data.user.gender || '',
+            gender: response.data.user.gender || 'Male', // Default to Male if gender is not available
             address: response.data.user.address || '',
             headline: response.data.user.headline || '',
             summary: response.data.user.summary || '',
@@ -147,7 +140,7 @@ const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
         const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
         const userId = decryptedData.id;
 
-        const response = await axios.patch(`${config.BACKEND_URL}/api/users/${userId}`, editedDetails, {
+        const response = await axios.put(`${config.BACKEND_URL}/api/users/${userId}`, editedDetails, {
           headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
@@ -274,14 +267,34 @@ const response = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
                     <DetailItem>
                       <Label>Gender</Label>
                       {isEditing ? (
-                        <StyledTextField
+                        <Select
                           value={editedDetails.gender}
                           onChange={handleInputChange('gender')}
                           fullWidth
-                          variant="outlined"
-                        />
+                          sx={{
+                            color: '#E1E9EE',
+                            '.MuiOutlinedInput-notchedOutline': {
+                              borderColor: 'rgba(225, 233, 238, 0.3)',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                              borderColor: '#21CBF3',
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                              borderColor: '#21CBF3',
+                            },
+                            '.MuiSvgIcon-root': {
+                              color: '#E1E9EE',
+                            },
+                            '.MuiSelect-select': {
+                              color: '#E1E9EE',
+                            },
+                          }}
+                        >
+                          <MenuItem value="Male">Male</MenuItem>
+                          <MenuItem value="Female">Female</MenuItem>
+                        </Select>
                       ) : (
-                        <Value>{userDetails.user.gender || 'N/A'}</Value>
+                        <Value>{userDetails.user.gender || 'Male'}</Value>
                       )}
                     </DetailItem>
                   </Grid>
@@ -450,7 +463,7 @@ const LogoutButton = styled(Button)({
     borderColor: '#ff6b6b',
   },
 });
-// Define styled components
+
 const Container = styled(Box)({
   padding: '20px',
   maxWidth: '800px',
