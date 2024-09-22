@@ -1,26 +1,26 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react'; // Removed useState
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import { styled } from '@mui/material/styles';
 
 const ShapesBackground = () => {
   const canvasRef = useRef(null);
-  const canvasHeight = 10000; // Extend the canvas height for shapes movement
+  const canvasHeight = 3000; // Reduced canvas height for better performance
 
   const getResponsiveSettings = () => {
     const canvasWidth = window.innerWidth;
     let shapeCount, maxShapeSize, margin;
 
     if (canvasWidth <= 480) { // Mobile
-      shapeCount = 50;
-      maxShapeSize = 50;
-      margin = 20;
+      shapeCount = 20;
+      maxShapeSize = 40;
+      margin = 10;
     } else if (canvasWidth <= 768) { // Tablet
-      shapeCount = 100;
-      maxShapeSize = 75;
-      margin = 30;
+      shapeCount = 30;
+      maxShapeSize = 60;
+      margin = 20;
     } else { // Desktop
-      shapeCount = 200;
-      maxShapeSize = 160;
-      margin = 50;
+      shapeCount = 50;
+      maxShapeSize = 120;
+      margin = 30;
     }
 
     return { shapeCount, maxShapeSize, margin, canvasWidth };
@@ -41,11 +41,11 @@ const ShapesBackground = () => {
       return {
         x: Math.random() * (canvasWidth - 2 * margin) + margin,
         y: Math.random() * canvasHeight,
-        size: Math.random() * (maxShapeSize / 2) + maxShapeSize / 2, // Even larger sizes
+        size: Math.random() * (maxShapeSize / 2) + maxShapeSize / 2,
         color: baseColors[Math.floor(Math.random() * baseColors.length)],
         type: shapeType,
-        speedX: Math.random() * 2 - 1,
-        speedY: Math.random() * 2 - 1,
+        speedX: (Math.random() * 2 - 1) * 0.5, // Reduced speed
+        speedY: (Math.random() * 2 - 1) * 0.5, // Reduced speed
       };
     };
 
@@ -55,6 +55,7 @@ const ShapesBackground = () => {
   }, [canvasHeight, margin, shapeCount, maxShapeSize, canvasWidth]);
 
   const drawShapes = useCallback((ctx, canvasWidth, canvasHeight, margin, shapes) => {
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -74,11 +75,8 @@ const ShapesBackground = () => {
           for (let i = 0; i < 5; i++) {
             const x = shape.x + shape.size / 2 * Math.cos(i * angle - Math.PI / 2);
             const y = shape.y + shape.size / 2 * Math.sin(i * angle - Math.PI / 2);
-            if (i === 0) {
-              ctx.moveTo(x, y);
-            } else {
-              ctx.lineTo(x, y);
-            }
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
           }
           ctx.closePath();
           ctx.fill();
@@ -91,17 +89,15 @@ const ShapesBackground = () => {
             const radius = i % 2 === 0 ? outerRadius : innerRadius;
             const x = shape.x + radius * Math.cos(i * Math.PI / 5 - Math.PI / 2);
             const y = shape.y + radius * Math.sin(i * Math.PI / 5 - Math.PI / 2);
-            if (i === 0) {
-              ctx.moveTo(x, y);
-            } else {
-              ctx.lineTo(x, y);
-            }
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
           }
           ctx.closePath();
-          ctx.lineWidth = 5;
-          ctx.stroke();
+          ctx.fill();
           break;
         default:
+          // Handle any unexpected shape types
+          console.warn(`Unexpected shape type: ${shape.type}`);
           break;
       }
 
@@ -115,8 +111,6 @@ const ShapesBackground = () => {
         shape.speedY *= -1;
       }
     });
-
-    requestAnimationFrame(() => drawShapes(ctx, canvasWidth, canvasHeight, margin, shapes));
   }, []);
 
   useEffect(() => {
@@ -125,22 +119,27 @@ const ShapesBackground = () => {
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
-    drawShapes(ctx, canvas.width, canvasHeight, margin, shapes);
+    let animationFrameId;
+    const render = () => {
+      drawShapes(ctx, canvas.width, canvasHeight, margin, shapes);
+      animationFrameId = requestAnimationFrame(render);
+    };
+    render();
 
     const handleResize = () => {
       const { canvasWidth } = getResponsiveSettings();
       canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [drawShapes, shapes, canvasWidth, margin]);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [drawShapes, shapes, canvasWidth, canvasHeight, margin]);
 
   return <CanvasContainer><canvas ref={canvasRef} /></CanvasContainer>;
 };
-
-// Styled Components
 
 const CanvasContainer = styled('div')({
   position: 'fixed',
@@ -148,7 +147,7 @@ const CanvasContainer = styled('div')({
   left: 0,
   width: '100%', 
   height: '100vh', 
-  zIndex: -1, // Send to background
+  zIndex: -1,
   overflow: 'hidden',
 });
 

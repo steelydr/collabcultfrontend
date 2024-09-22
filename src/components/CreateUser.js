@@ -12,8 +12,8 @@ import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-input-2';
 import { gsap } from 'gsap';
 import CryptoJS from 'crypto-js';
-import { SECRET_KEY } from './config'; // Import the secret key
-
+import config,{ SECRET_KEY } from './config';
+import ShapesBackground from './ShapesBackground';
 document.body.style.backgroundColor = '#000000';
 document.body.style.overflowX = 'hidden';
 document.documentElement.style.overflowX = 'hidden';
@@ -294,14 +294,14 @@ const CreateUser = () => {
     };
   
     try {
-      await axios.post(`http://localhost:80/api/users`, payload, {
+      await axios.post(`${config.BACKEND_URL}/api/users`,  payload, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
   
       swal("Success", "Registration successful!", "success").then(() => {
-        navigate('/community');
+        navigate('/');
       });
     } catch (error) {
       if (error.response && error.response.status === 409) {
@@ -320,7 +320,7 @@ const CreateUser = () => {
     e.preventDefault();
   
     try {
-      const response = await axios.get('http://localhost:80/api/users', {
+      const response = await axios.get(`${config.BACKEND_URL}/api/users`, {
         headers: {
           'Accept': 'application/json',
         },
@@ -334,7 +334,7 @@ const CreateUser = () => {
         localStorage.setItem('user', encryptedUser);
   
         swal("Success", "Login successful!", "success").then(() => {
-          navigate(`/community`);
+          navigate(`/`);
         });
       } else {
         swal("Error", "Login failed. Please check your credentials.", "error");
@@ -385,10 +385,11 @@ const CreateUser = () => {
 
   return (
     <Background>
+      <ShapesBackground />
       <SVGFilter />
       <FormContainer isFlipped={state.isFlipped} elevation={6}>
         <FormSide>
-          <Typography component="h1" variant="h4" align="center" sx={{ color: '#ffff', mb: 4, fontWeight: 'bold' }}>
+          <Typography component="h1" variant="h4" align="center" sx={{ color: '#ffff', mb: 4, fontWeight: 'bold' ,backgroundColor:'transparent'}}>
             SIGN-UP
           </Typography>
           <img 
