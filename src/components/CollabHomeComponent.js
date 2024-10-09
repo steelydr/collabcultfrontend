@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { Box, Card, CardContent, Typography, Button, TextField, Snackbar } from '@mui/material';
+import { Box, Card, CardContent, Typography, Button, TextField, Snackbar, CircularProgress } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import { FaInstagram, FaYoutube } from "react-icons/fa";
 import Sentiment from 'sentiment';
@@ -226,32 +226,34 @@ const CollabHomeComponent = () => {
       <ShapesBackground />
       <Title>CONNECT CREATE CONQUER</Title>
       <PostsContainer>
-        {userData && (
-          <CreatePostCard>
-            <CardContent>
-              <StyledTextField
-                fullWidth
-                multiline
-                rows={3}
-                variant="outlined"
-                placeholder="What's on your mind?"
-                value={newPost}
-                onChange={(e) => setNewPost(e.target.value)}
-              />
-              <Box mt={2} display="flex" justifyContent="flex-end">
-                <StyledButton
-                  variant="contained"
-                  onClick={handleCreatePost}
-                  disabled={!newPost.trim() || !userData || isLoading}
-                >
-                  {isLoading ? 'Posting...' : 'Post'}
-                </StyledButton>
-              </Box>
-            </CardContent>
-          </CreatePostCard>
-        )}
+      <CreatePostCard>
+    <CardContent>
+      <StyledTextField
+        fullWidth
+        multiline
+        rows={3}
+        variant="outlined"
+        placeholder="What's on your mind?"
+        value={newPost}
+        onChange={(e) => setNewPost(e.target.value)}
+      />
+      <Box mt={2} display="flex" justifyContent="flex-end">
+        <StyledButton
+          variant="contained"
+          onClick={handleCreatePost}
+          disabled={!newPost.trim() || !userData || isLoading} // Disable if there's no content or the user isn't logged in
+        >
+          {isLoading ? 'Posting...' : 'Post'}
+        </StyledButton>
+      </Box>
+    </CardContent>
+  </CreatePostCard>
 
-        {posts.length > 0 ? (
+        {isLoading ? (
+          <Box display="flex" justifyContent="center" mt={2}>
+            <CircularProgress />
+          </Box>
+        ) : posts.length > 0 ? (
           <>
             {(userData ? posts : posts.slice(0, 4)).map((post) => (
               <AnimatedPostCard
@@ -288,27 +290,30 @@ const CollabHomeComponent = () => {
           </Typography>
         )}
       </PostsContainer>
+     
 
-      <Footer>
-        <FooterContent>
-          <FooterTitle>COLLABCULT COMMUNITY</FooterTitle>
-          <FooterDescription>
-            Join our community and collaborate to create innovative solutions. Share your thoughts, learn together, and conquer challenges with us!
-          </FooterDescription>
-          <SocialIcons>
-            <a href="https://www.instagram.com/collab._cult_/" target="_blank" rel="noopener noreferrer">
-              <FaInstagram />
-            </a>
-            <a href="https://www.youtube.com/@vamshivk" target="_blank" rel="noopener noreferrer">
-              <FaYoutube />
-            </a>
-          </SocialIcons>
-          <FooterLink href="mailto:vamshivk873@gmail.com">Send us a message</FooterLink>
-        </FooterContent>
-        <Copyright>
-          © {new Date().getFullYear()} CollabCult. All rights reserved.
-        </Copyright>
-      </Footer>
+      {!isLoading && (
+        <Footer>
+          <FooterContent>
+            <FooterTitle>COLLABCULT COMMUNITY</FooterTitle>
+            <FooterDescription>
+              Join our community and collaborate to create innovative solutions. Share your thoughts, learn together, and conquer challenges with us!
+            </FooterDescription>
+            <SocialIcons>
+              <a href="https://www.instagram.com/collab._cult_/" target="_blank" rel="noopener noreferrer">
+                <FaInstagram />
+              </a>
+              <a href="https://www.youtube.com/@vamshivk" target="_blank" rel="noopener noreferrer">
+                <FaYoutube />
+              </a>
+            </SocialIcons>
+            <FooterLink href="mailto:vamshivk873@gmail.com">Send us a message</FooterLink>
+          </FooterContent>
+          <Copyright>
+            © {new Date().getFullYear()} CollabCult. All rights reserved.
+          </Copyright>
+        </Footer>
+      )}
 
       <Snackbar
         open={snackbar.open}

@@ -300,6 +300,7 @@ const CollabCultPage = () => {
           {isUserLoggedIn && activeComponent === 'userDetails' && <CollabCultUsersList user={selectedUser} />}
         </Suspense>
       </div>
+      
     </>
   );
 };
