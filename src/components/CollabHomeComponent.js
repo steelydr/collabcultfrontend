@@ -146,6 +146,7 @@ const CollabHomeComponent = () => {
       try {
         const response = await axios.get(`${config.BACKEND_URL}/api/posts`);
         let data = response.data;
+        console.log(data);
         if (Array.isArray(data)) {
           data = data.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
           setPosts(data);

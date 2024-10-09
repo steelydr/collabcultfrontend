@@ -32,24 +32,6 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
     fetchCommentUserDetails();
   }, [user.id]);
 
-  // Long Polling for fetching comments
-  useEffect(() => {
-    const longPolling = async () => {
-      try {
-        // Make a request to fetch comments and keep the connection open until new data arrives
-        await fetchComments();
-        // Re-trigger the long polling after fetching new comments
-        longPolling();
-      } catch (error) {
-        console.error('Error during long polling:', error);
-        // Retry polling after a delay if an error occurs
-        setTimeout(longPolling, 5000);
-      }
-    };
-
-    longPolling();
-  }, [fetchComments]);
-
   const handleEditComment = () => {
     setIsEditing(true);
   };
