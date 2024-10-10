@@ -187,18 +187,18 @@ const UserPostsOverlay = ({
   }, [showComments, post, fetchComments, subscribeToComments]);
 
   const handleCreateComment = async () => {
-    try {
-      const newCommentData = {
-        post_id: post.id,
-        user_id: currentUser.id,
-        content: newCommentContent,
-      };
-      await axios.post(`${config.BACKEND_URL}/api/comments`, newCommentData);
-      setNewCommentContent(''); // Clear the input field after successful submission
-    } catch (error) {
-      console.error('Error creating comment:', error);
-    }
-  };
+  try {
+    const newCommentData = {
+      post_id: post.id,
+      user_id: currentUser.id,
+      content: newCommentContent,
+    };
+    await axios.post(`${config.BACKEND_URL}/api/comments`, newCommentData);
+    setNewCommentContent(''); // Clear the input field after successful submission
+  } catch (error) {
+    console.error('Error creating comment:', error);
+  }
+};
   const handleUpdateComment = async (commentId) => {
     try {
       const updatedCommentData = {

@@ -315,6 +315,7 @@ const PostCard = ({ post, onDelete, onUpdate, isLoading }) => {
             comments.map((comment) => (
               <Suspense key={comment.id} fallback={<CircularProgress size={24} />}>
                 <LazyLinkedInComment
+                  post = {post}
                   comment={comment}
                   fetchComments={fetchComments}
                   currentUser={currentUser}

@@ -5,7 +5,7 @@ import { ThumbUpAltOutlined, ThumbUpAlt, ChatBubbleOutline, Share, PersonAdd, Ch
 import ShapesBackground from './ShapesBackground';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { SECRET_KEY } from './config';
+import config,{ SECRET_KEY } from './config';
 
 const UserPostsOverlay = lazy(() => import('./UserPostsOverlay'));
 
@@ -101,7 +101,7 @@ const CollabCultUsersList = ({ user }) => {
         const userId = decryptedData.id;
         setCurrentUser(decryptedData);
         
-        const userResponse = await axios.get(`http://localhost:80/api/users/${userId}`, {
+        const userResponse = await axios.get(`${config.BACKEND_URL}/api/users/${userId}`, {
           headers: { Accept: 'application/json' },
         });
         
@@ -109,7 +109,7 @@ const CollabCultUsersList = ({ user }) => {
           setCurrentUser(userResponse.data.user);
         }
 
-        const connectionsResponse = await axios.get(`http://localhost:80/api/connections/user/${userId}`);
+        const connectionsResponse = await axios.get(`${config.BACKEND_URL}/api/connections/user/${userId}`);
         setConnections(connectionsResponse.data);
 
         const connection = connectionsResponse.data.find(conn => 
@@ -154,7 +154,7 @@ const CollabCultUsersList = ({ user }) => {
 
   const handleSendConnectionRequest = async () => {
     try {
-      await axios.post(`http://localhost:80/api/connections/request`, null, {
+      await axios.post(`${config.BACKEND_URL}/api/connections/request`, null, {
         params: {
           userId: currentUser.id,
           connectedUserId: user.userid
@@ -169,7 +169,7 @@ const CollabCultUsersList = ({ user }) => {
 
   const handleAcceptConnection = async () => {
     try {
-      await axios.put(`http://localhost:80/api/connections/accept`, null, {
+      await axios.put(`${config.BACKEND_URL}/api/connections/accept`, null, {
         params: {
           userId: currentUser.id,
           connectedUserId: user.userid
@@ -184,7 +184,7 @@ const CollabCultUsersList = ({ user }) => {
 
   const handleIgnoreConnection = async () => {
     try {
-      await axios.delete(`http://localhost:80/api/connections/ignore`, {
+      await axios.delete(`${config.BACKEND_URL}/api/connections/ignore`, {
         params: {
           userId: currentUser.id,
           connectedUserId: user.userid
@@ -199,7 +199,7 @@ const CollabCultUsersList = ({ user }) => {
 
   const handleDeleteConnection = async () => {
     try {
-      await axios.delete(`http://localhost:80/api/connections/delete`, {
+      await axios.delete(`${config.BACKEND_URL}/api/connections/delete`, {
         params: {
           userId: currentUser.id,
           connectedUserId: user.userid

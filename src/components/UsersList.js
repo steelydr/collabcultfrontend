@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
+import config from './config';
 const UsersList = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://collabculture-app.azurewebsites.net';
+  const backendUrl = config.BACKEND_URL;
 
   useEffect(() => {
     const fetchUsers = async () => {

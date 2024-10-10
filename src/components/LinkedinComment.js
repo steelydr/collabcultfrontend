@@ -8,7 +8,6 @@ import {
   TextField,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import config from './config';
 
 const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
   const { id, user, content, createdDate } = comment;
@@ -21,7 +20,7 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
   useEffect(() => {
     const fetchCommentUserDetails = async () => {
       try {
-        const response = await axios.get(`${config.BACKEND_URL}/api/users/${user.id}`);
+        const response = await axios.get(`http://localhost/api/users/${user.id}`);
         const commentUser = response.data.user;
         setCommentUserData(commentUser); // Storing complete user data including profilePictureType
       } catch (error) {
@@ -31,6 +30,24 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
 
     fetchCommentUserDetails();
   }, [user.id]);
+
+  // Long Polling for fetching comments
+  useEffect(() => {
+    const longPolling = async () => {
+      try {
+        // Make a request to fetch comments and keep the connection open until new data arrives
+        await fetchComments();
+        // Re-trigger the long polling after fetching new comments
+        longPolling();
+      } catch (error) {
+        console.error('Error during long polling:', error);
+        // Retry polling after a delay if an error occurs
+        setTimeout(longPolling, 5000);
+      }
+    };
+
+    longPolling();
+  }, [fetchComments]);
 
   const handleEditComment = () => {
     setIsEditing(true);
@@ -45,8 +62,9 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
     if (editedComment.trim() !== content) {
       setIsLoading(true);
       try {
-        await axios.put(`${config.BACKEND_URL}/api/comments/${id}`, {
+        await axios.put(`http://localhost/api/comments/${id}`, {
           content: editedComment,
+          
         });
         setIsEditing(false);
         setIsLoading(false);
@@ -61,7 +79,7 @@ const LinkedinComment = ({ comment, fetchComments, currentUser }) => {
   const handleDeleteComment = async () => {
     setIsLoading(true);
     try {
-      await axios.delete(`${config.BACKEND_URL}/api/comments/${id}`);
+      await axios.delete(`http://localhost/api/comments/${id}`);
       setIsLoading(false);
       fetchComments(); // Re-fetch comments after deleting
     } catch (error) {
