@@ -347,6 +347,12 @@ const UserPostsOverlay = ({
                             onChange={(e) =>
                               setEditingComment({ ...editingComment, content: e.target.value })
                             }
+                            InputProps={{
+                              style: { color: 'white' },
+                            }}
+                            InputLabelProps={{
+                              style: { color: 'white' },
+                            }}
                           />
                           <Button onClick={() => handleUpdateComment(comment.id)}  sx={{ color: '#1976d2', 
                         fontSize: '14px',  width: '24px', height: '24px', marginRight: '2px' ,
