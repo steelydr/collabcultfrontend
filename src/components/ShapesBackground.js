@@ -15,11 +15,11 @@ const ShapesBackground = () => {
       margin = 10;
     } else if (canvasWidth <= 768) { // Tablet
       shapeCount = 30;
-      maxShapeSize = 60;
+      maxShapeSize = 50;
       margin = 20;
     } else { // Desktop
-      shapeCount = 50;
-      maxShapeSize = 120;
+      shapeCount = 30;
+      maxShapeSize = 80;
       margin = 30;
     }
 
@@ -37,13 +37,11 @@ const ShapesBackground = () => {
     ];
 
     const createShape = (canvasWidth, canvasHeight, margin, baseColors) => {
-      const shapeType = Math.random() < 0.5 ? 'circle' : (Math.random() < 0.75 ? 'star' : 'pentagon');
       return {
         x: Math.random() * (canvasWidth - 2 * margin) + margin,
         y: Math.random() * canvasHeight,
         size: Math.random() * (maxShapeSize / 2) + maxShapeSize / 2,
         color: baseColors[Math.floor(Math.random() * baseColors.length)],
-        type: shapeType,
         speedX: (Math.random() * 2 - 1) * 0.5, // Reduced speed
         speedY: (Math.random() * 2 - 1) * 0.5, // Reduced speed
       };
@@ -61,45 +59,9 @@ const ShapesBackground = () => {
 
     shapes.forEach((shape) => {
       ctx.fillStyle = shape.color;
-      ctx.strokeStyle = shape.color;
-
-      switch (shape.type) {
-        case 'circle':
-          ctx.beginPath();
-          ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
-          ctx.fill();
-          break;
-        case 'pentagon':
-          ctx.beginPath();
-          const angle = (Math.PI * 2) / 5;
-          for (let i = 0; i < 5; i++) {
-            const x = shape.x + shape.size / 2 * Math.cos(i * angle - Math.PI / 2);
-            const y = shape.y + shape.size / 2 * Math.sin(i * angle - Math.PI / 2);
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.closePath();
-          ctx.fill();
-          break;
-        case 'star':
-          ctx.beginPath();
-          const outerRadius = shape.size / 2;
-          const innerRadius = outerRadius / 2.5;
-          for (let i = 0; i < 10; i++) {
-            const radius = i % 2 === 0 ? outerRadius : innerRadius;
-            const x = shape.x + radius * Math.cos(i * Math.PI / 5 - Math.PI / 2);
-            const y = shape.y + radius * Math.sin(i * Math.PI / 5 - Math.PI / 2);
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.closePath();
-          ctx.fill();
-          break;
-        default:
-          // Handle any unexpected shape types
-          console.warn(`Unexpected shape type: ${shape.type}`);
-          break;
-      }
+      ctx.beginPath();
+      ctx.arc(shape.x, shape.y, shape.size / 2, 0, Math.PI * 2);
+      ctx.fill();
 
       shape.x += shape.speedX;
       shape.y += shape.speedY;

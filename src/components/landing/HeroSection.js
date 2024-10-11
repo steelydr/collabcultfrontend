@@ -1,4 +1,3 @@
-// src/components/HeroSection.js
 import React, { useEffect, useRef } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -19,14 +18,14 @@ const HeroSectionContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
   overflow: 'hidden',
   color: '#FFFFFF',
-  padding: '0 20px', // Add padding for responsive spacing
+  padding: '0 20px',
 }));
 
 const HeroContent = styled(Box)(({ theme }) => ({
   textAlign: 'center',
   zIndex: 1,
-  maxWidth: '800px', // Limit the width for better alignment
-  margin: '0 auto', // Center the content
+  maxWidth: '800px',
+  margin: '0 auto',
 }));
 
 const AnimatedBackground = styled(Box)(({ theme }) => ({
@@ -46,7 +45,7 @@ const AnimatedText = styled(Typography)(({ theme }) => ({
   position: 'relative',
   display: 'inline-block',
   color: '#21CBF3',
-  fontSize: '4rem', // Increased font size for emphasis
+  fontSize: '4rem',
   animation: 'fadeIn 3s ease-in-out',
   '@keyframes fadeIn': {
     '0%': {
@@ -61,19 +60,19 @@ const AnimatedText = styled(Typography)(({ theme }) => ({
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
-  borderRadius: '10px', // Rounded button for a modern look
-  padding: '12px 36px', // Slightly larger padding for a professional feel
+  borderRadius: '10px',
+  padding: '12px 36px',
   fontSize: '1rem',
   textTransform: 'none',
   color: '#FFFFFF',
   border: '2px solid #21CBF3',
-  backgroundColor: '#014D4E', // Professional dark teal background
+  backgroundColor: '#014D4E',
   transition: 'background-color 0.3s ease, color 0.3s ease, transform 0.3s ease',
-  boxShadow: '0px 8px 15px rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
+  boxShadow: '0px 8px 15px rgba(0, 0, 0, 0.1)',
   '&:hover': {
     backgroundColor: '#21CBF3',
     color: '#000000',
-    boxShadow: '0px 12px 20px rgba(0, 0, 0, 0.15)', // More pronounced shadow on hover
+    boxShadow: '0px 12px 20px rgba(0, 0, 0, 0.15)',
   },
 }));
 
@@ -83,26 +82,6 @@ const HeroSection = () => {
 
   const getRandomColor = () => {
     return baseColors[Math.floor(Math.random() * baseColors.length)];
-  };
-
-  const drawStar = (ctx, shape) => {
-    ctx.beginPath();
-    const outerRadius = shape.size / 2;
-    const innerRadius = outerRadius / 2.5;
-    for (let i = 0; i < 10; i++) {
-      const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const x = shape.x + radius * Math.cos(i * Math.PI / 5 - Math.PI / 2);
-      const y = shape.y + radius * Math.sin(i * Math.PI / 5 - Math.PI / 2);
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-    ctx.closePath();
-    ctx.strokeStyle = shape.color;
-    ctx.lineWidth = 5;
-    ctx.stroke();
   };
 
   const drawCircle = (ctx, shape) => {
@@ -118,24 +97,14 @@ const HeroSection = () => {
     const shapes = [];
 
     const createShapes = () => {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 5; i++) {  // Reduced from 10 to 5 circles
         shapes.push({
-          type: 'star',
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          size: 80 + Math.random() * 80, // Random star size between 60 and 140
+          size: 70 + Math.random() * 60,
           color: getRandomColor(),
-          dx: 1 + Math.random(),
-          dy: 1 + Math.random(),
-        });
-        shapes.push({
-          type: 'circle',
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: 70 + Math.random() * 60, // Random circle size between 40 and 100
-          color: getRandomColor(),
-          dx: 1 + Math.random(),
-          dy: 1 + Math.random(),
+          dx: 0.2 + Math.random() * 0.3,  // Reduced speed
+          dy: 0.2 + Math.random() * 0.3,  // Reduced speed
         });
       }
     };
@@ -144,16 +113,11 @@ const HeroSection = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       shapes.forEach((shape) => {
-        if (shape.type === 'star') {
-          drawStar(ctx, shape);
-        } else if (shape.type === 'circle') {
-          drawCircle(ctx, shape);
-        }
+        drawCircle(ctx, shape);
 
         shape.x += shape.dx;
         shape.y += shape.dy;
 
-        // Reverse direction if the shape hits the canvas bounds
         if (shape.x + shape.size / 2 > canvas.width || shape.x - shape.size / 2 < 0) {
           shape.dx = -shape.dx;
         }
@@ -204,7 +168,7 @@ const HeroSection = () => {
             fontSize: '1.5rem', 
             lineHeight: 1.5, 
             zIndex:'3',
-            color: '#013c3c' // Deep Teal for emphasis
+            color: '#013c3c'
           }}
         >
           Break free from routine. Pursue your passions. Collaborate with like-minded individuals.
@@ -219,7 +183,7 @@ const HeroSection = () => {
             fontWeight: 300, 
             fontSize: '1.1rem', 
             lineHeight: 1.6, 
-            color: '#f1f1f1' // Charcoal Gray for secondary text
+            color: '#f1f1f1'
           }}
         >
           Stay Connected with us for more updates!
