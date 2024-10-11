@@ -31,6 +31,9 @@ const CollabHomeComponent = () => {
   const handleRegisterLogin = () => {
     navigate('/register');
   };
+   const handlecommunitypage =()=>{
+    navigate('/cc');
+   };
 
   const handleCreatePost = async () => {
     if (newPost.trim() && userData) {
@@ -281,6 +284,12 @@ const CollabHomeComponent = () => {
                 >
                   Login
                 </StyledButton>
+                <StyledTypography sx={{ mt : 2}}>
+                  To know more about our community journey Click join us!
+                </StyledTypography>
+                <StyledButton variant="contained" onClick={handlecommunitypage} sx={{ mt : 2}}>
+                  Join Us
+               </StyledButton>
               </Box>
             )}
           </>
