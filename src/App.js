@@ -12,10 +12,10 @@ const App = () => {
       <Router>
         <div>
           <Routes>
-            <Route exact path="/cc" element={<LandingPage />} />
+            <Route exact path="/" element={<LandingPage />} />
             <Route path="/register" element={<CreateUser />} />
             <Route
-              path="/"
+              path="/cc"
               element={
                 <Suspense fallback={<div>Loading...</div>}>
                   <CollabCultPage />
