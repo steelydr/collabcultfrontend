@@ -168,7 +168,7 @@ const HeroSection = () => {
             fontSize: '1.5rem', 
             lineHeight: 1.5, 
             zIndex:'3',
-            color: '#013c3c'
+            color: 'white'
           }}
         >
           Break free from routine. Pursue your passions. Collaborate with like-minded individuals.
