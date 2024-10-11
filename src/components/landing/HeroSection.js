@@ -164,8 +164,8 @@ const HeroSection = () => {
           gutterBottom 
           sx={{ 
             mb: 4, 
-            fontWeight: 600, 
-            fontSize: '1.5rem', 
+            fontWeight: 400, 
+            fontSize: '1.25rem', 
             lineHeight: 1.5, 
             zIndex:'3',
             color: 'white'
