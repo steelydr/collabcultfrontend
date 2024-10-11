@@ -301,7 +301,7 @@ const CreateUser = () => {
       });
   
       swal("Success", "Registration successful!", "success").then(() => {
-        navigate('/');
+        navigate('/cc');
       });
     } catch (error) {
       if (error.response && error.response.status === 409) {
@@ -334,7 +334,7 @@ const CreateUser = () => {
         localStorage.setItem('user', encryptedUser);
   
         swal("Success", "Login successful!", "success").then(() => {
-          navigate(`/`);
+          navigate(`/cc`);
         });
       } else {
         swal("Error", "Login failed. Please check your credentials.", "error");
