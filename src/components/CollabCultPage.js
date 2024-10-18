@@ -19,14 +19,22 @@ const MdSearch = lazy(() => import('react-icons/md').then((module) => ({ default
 const MdEditNote = lazy(() => import('react-icons/md').then((module) => ({ default: module.MdEditNote })));
 const IoSettingsOutline = lazy(() => import('react-icons/io5').then((module) => ({ default: module.IoSettingsOutline })));
 const AiFillHome = lazy(() => import('react-icons/ai').then((module) => ({ default: module.AiFillHome })));
+const FaUser = lazy(() => import('react-icons/fa').then((module) => ({ default: module.FaUser })));
 
 const UpdateUser = lazy(() => import('./UpdateUser'));
 const MyPosts = lazy(() => import('./MyPosts'));
 const CollabHomeComponent = lazy(() => import('./CollabHomeComponent'));
 const CollabCultUsersList = lazy(() => import('./CollabCultUsersList'));
+const UserDrawer = lazy(() => import('./UserDrawer'));
 
 const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
   width: 300,
+  [theme.breakpoints.down('sm')]: {
+    width : 80, 
+  },
+  [theme.breakpoints.between('sm', 'md')]: {
+    maxWidth: '350px', 
+  },
   '& .MuiInputBase-root': {
     color: '#ffffff',
     '&::before': {
@@ -88,6 +96,7 @@ const CollabCultPage = () => {
   const [userSuggestions, setUserSuggestions] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const isMobile = useMediaQuery('(max-width: 600px)');
 
@@ -179,6 +188,22 @@ const CollabCultPage = () => {
     [isUserLoggedIn]
   );
 
+  const handleDrawerToggle = () => {
+    setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('activeComponent');
+    sessionStorage.removeItem('searchInputValue');
+    sessionStorage.removeItem('selectedUser');
+    setIsUserLoggedIn(false);
+    setActiveComponent('home');
+    setSelectedUser(null);
+    setInputValue('');
+    setIsDrawerOpen(false);
+  };
+
   const { filteredSuggestions } = useTrie(userSuggestions, inputValue);
 
   return (
@@ -236,7 +261,7 @@ const CollabCultPage = () => {
                         <div>
                           <strong>{option.name || 'Unknown'}</strong>
                           <br />
-                          {option.headline || 'No headline'}
+                          {option.headline || 'N/A'}
                         </div>
                       </CustomListItem>
                     )}
@@ -280,11 +305,23 @@ const CollabCultPage = () => {
                     onClick={() => handleViewChange('editProfile')}
                     sx={{
                       color: activeComponent === 'editProfile' ? '#21CBF3' : '#FFFFFF',
+                      marginRight: '20px',
                       transition: 'color 0.3s ease',
                     }}
                   >
                     <Suspense fallback={<CircularProgress size={20} />}>
                       <IoSettingsOutline size={24} />
+                    </Suspense>
+                  </IconButton>
+                  <IconButton
+                    onClick={handleDrawerToggle}
+                    sx={{
+                      color: '#FFFFFF',
+                      transition: 'color 0.3s ease',
+                    }}
+                  >
+                    <Suspense fallback={<CircularProgress size={20} />}>
+                      <FaUser size={24} />
                     </Suspense>
                   </IconButton>
                 </>
@@ -299,8 +336,15 @@ const CollabCultPage = () => {
           {isUserLoggedIn && activeComponent === 'editProfile' && <UpdateUser />}
           {isUserLoggedIn && activeComponent === 'userDetails' && <CollabCultUsersList user={selectedUser} />}
         </Suspense>
+
+        <Suspense fallback={<CircularProgress sx={{ display: 'block', margin: 'auto', marginTop: '20px' }} />}>
+          <UserDrawer 
+            open={isDrawerOpen} 
+            onClose={handleDrawerToggle}
+            onLogout={handleLogout}
+          />
+        </Suspense>
       </div>
-      
     </>
   );
 };

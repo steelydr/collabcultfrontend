@@ -300,7 +300,7 @@ const CollabCultUsersList = ({ user }) => {
               {user.name}
             </Typography>
             <Typography variant="h6" gutterBottom sx={{ color:'white'}}>
-              {user.headline || 'No headline'}
+              {user.headline || ''}
             </Typography>
             <Typography variant="body1" color="white">
               {user.location || 'No location'} • {user.connections || '0'} connections
